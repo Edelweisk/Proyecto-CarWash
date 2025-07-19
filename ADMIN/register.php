@@ -2,42 +2,65 @@
 include_once "../conexion.php";
 
 if (isset($_REQUEST['btn_registrar'])) {
-    $nombre   = $_POST['nombre'];
-    $email    = $_POST['email'];
-    $usuario  = $_POST['usuario']; 
-    $password = $_POST['password'];
-    $rol      = $_POST['rol'];
+    // Recoger y sanitizar datos del formulario
+    $nombre            = trim($_POST['nombre']);
+    $fecha_nacimiento  = $_POST['fecha_nacimiento'];
+    $lugar_nacimiento  = trim($_POST['lugar_nacimiento']);
+    $numero_identificacion = trim($_POST['numero_identificacion']);
+    $nacionalidad      = trim($_POST['nacionalidad']);
+    $estado_civil      = $_POST['estado_civil'];
+    $direccion         = trim($_POST['direccion']);
+    $telefono          = trim($_POST['telefono']);
+    $numero_emergencia = trim($_POST['numero_emergencia']);
+    $email             = trim($_POST['email']);
+    $usuario           = trim($_POST['usuario']);
+    $password          = $_POST['password'];
+    $rol               = $_POST['rol'];
 
-    $sql = "SELECT id FROM usuario WHERE usuario = '$usuario'";
-    $ejecutar = $con->query($sql);
-    
-    if ($ejecutar->num_rows > 0) { 
+    // Validar que el usuario no exista (usar prepared statement)
+    $stmt = $con->prepare("SELECT id FROM usuario WHERE usuario = ?");
+    $stmt->bind_param("s", $usuario);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) { 
         echo "<script>alert('El usuario ya existe, por favor ingrese otro');</script>"; 
     } else {
-        $imgNombre = $_FILES['imagen']['name'];
-        $imgTmp    = $_FILES['imagen']['tmp_name'];
-        $ext       = pathinfo($imgNombre, PATHINFO_EXTENSION);
-        $imgFinal  = strtolower($usuario . "_" . time() . "." . $ext);
-        $imgDestino = "../IMG/usuarios/" . $imgFinal;
+        // Procesar imagen
+        $imgFinal = 'default.png'; // valor por defecto
+        if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            $imgNombre = $_FILES['imagen']['name'];
+            $imgTmp    = $_FILES['imagen']['tmp_name'];
+            $ext       = pathinfo($imgNombre, PATHINFO_EXTENSION);
+            $imgFinal  = strtolower($usuario . "_" . time() . "." . $ext);
+            $imgDestino = "../IMG/usuarios/" . $imgFinal;
 
-        if (move_uploaded_file($imgTmp, $imgDestino)) {
-            $sql = "INSERT INTO usuario(nombre, email, usuario, password, imagen, rol)
-                    VALUES('$nombre', '$email', '$usuario', '$password', '$imgFinal', '$rol')";
-        } else {
-            $sql = "INSERT INTO usuario(nombre, email, usuario, password, imagen, rol)
-                    VALUES('$nombre', '$email', '$usuario', '$password', NULL, '$rol')";
+            // Mover archivo
+            if (!move_uploaded_file($imgTmp, $imgDestino)) {
+                // Si falla mover, se queda en default.png
+                $imgFinal = 'default.png';
+            }
         }
 
-        $ejecutar = $con->query($sql);
+        // Hashear la contraseña para mayor seguridad
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-        if ($ejecutar > 0) {
+        // Insertar datos en la BD con prepared statement
+        $insert = $con->prepare("INSERT INTO usuario (nombre, fecha_nacimiento, lugar_nacimiento, numero_identificacion, nacionalidad, estado_civil, direccion, telefono, numero_emergencia, email, usuario, password, rol, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        $insert->bind_param("ssssssssssssss", $nombre, $fecha_nacimiento, $lugar_nacimiento, $numero_identificacion, $nacionalidad, $estado_civil, $direccion, $telefono, $numero_emergencia, $email, $usuario, $passwordHash, $rol, $imgFinal);
+
+        if ($insert->execute()) {
             echo "<script>alert('Empleado registrado correctamente');</script>";
         } else {
-            echo "<script>alert('Error al registrar el empleado');</script>";
+            echo "<script>alert('Error al registrar el empleado: " . $con->error . "');</script>";
         }
     }
+    $stmt->close();
+    $con->close();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -46,7 +69,6 @@ if (isset($_REQUEST['btn_registrar'])) {
     <title>Registrar Empleado - Debug Car Wash</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../CSS/CSSlogin/registro.css" />
-    
 </head>
 <body>
 
@@ -66,7 +88,6 @@ if (isset($_REQUEST['btn_registrar'])) {
             <div class="card shadow">
               <div class="card-body p-5">
                 <form action="register.php" method="POST" enctype="multipart/form-data" class="formulario-amplio">
-                  <!-- Aquí van los campos del formulario, igual que los tienes -->
                   <!-- Nombres y Apellidos -->
                   <div class="row mb-3">
                     <div class="col-md-6">
@@ -145,6 +166,7 @@ if (isset($_REQUEST['btn_registrar'])) {
                       <option value="" disabled selected>Seleccione un rol</option>
                       <option value="Secretaria">Secretaria</option>
                       <option value="TecnicoLavado">Técnico de Lavado</option>
+                      <option value="administrador">Administrador</option>
                     </select>
                   </div>
                   <!-- Imagen -->
