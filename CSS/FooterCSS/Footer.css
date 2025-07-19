@@ -1,0 +1,24 @@
+/* FOOTER */
+footer.main-footer {
+  background-color: #003049;
+  color: #fff;
+  text-align: center;
+  font-size: 0.9rem;
+  border-top: 3px solid #f77f00;
+}
+
+footer a {
+  color: #fcbf49;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+}

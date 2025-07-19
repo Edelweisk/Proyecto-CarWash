@@ -180,7 +180,7 @@ $activo_crearUsuarios = ($pagina === 'crearUsuarios.php') ? 'active' : '';
                 </a>
               </li>
               <li class="nav-item">
-                <a href="crearUsuarios.php" class="nav-link <?php echo $activo_crearUsuarios; ?>">
+                <a href="Registrar_Empleado.php" class="nav-link <?php echo $activo_crearUsuarios; ?>">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Agregar Nuevo Empleado</p>
                 </a>

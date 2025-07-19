@@ -3,80 +3,165 @@ require_once('../conexion.php');
 include 'header.php';
 ?>
 
-  <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1>Listas de Usuarios</h1>
-            <a href="crearUsuarios.php" class="btn btn-primary">Crear Usuarios</a>
-          </div>
-          <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="index.php">Inicio</a></li>
-              <li class="breadcrumb-item active">Listas de Usuarios</li>
-            </ol>
-          </div>
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+<!-- DataTables Buttons CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" />
+<!-- Estilo CSS -->
+ <link rel="stylesheet" href="../CSS/EmpleadosCSS/Empleado.css" />
+
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2 align-items-center">
+        <div class="col-sm-6">
+          <h1>Lista de Usuarios</h1>
         </div>
-      </div><!-- /.container-fluid -->
-    </section>
+        <div class="col-sm-6 text-end">
+          <a href="Registrar_Empleado.php" class="btn btn-primary"><i class="fas fa-user-plus"></i> Crear Empleado</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Main content -->
-    <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12">
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
 
-            <div class="card">
-              <div class="card-body">
-                <table id="example1" class="table table-bordered table-striped">
-                  <thead>
+          <div class="card shadow-sm rounded">
+            <div class="card-body">
+              <table id="usuariosTable" class="table table-striped table-bordered table-hover" style="width:100%">
+                <thead class="table-primary">
                   <tr>
-                    <th>N°</th>
+                    <th>#</th>
                     <th>Nombre</th>
                     <th>Correo</th>
                     <th>Usuario</th>
-                    <th>Contraseña</th>
+                    <th>Contraseña <small class="text-danger">(No recomendado mostrar)</small></th>
                     <th>Fecha de Creación</th>
-                    <th>Acción</th>
+                    <th>Acciones</th>
                   </tr>
-                  </thead>
-                  <tbody>
-                                      <?php
-                  $sql = "SELECT * FROM usuario";
-                  $ejecutar = $con->query($sql);
-                  while ($fila = mysqli_fetch_array($ejecutar)){ ;
-?>
-                  <tr>
-                    <td><?php echo $fila['id']  ?></td>
-                    <td><?php echo $fila['nombre']  ?></td>
-                    <td><?php echo $fila['email']  ?></td>
-                    <td><?php echo $fila['usuario']  ?></td>
-                    <td><?php echo $fila['password']  ?></td>
-                    <td><?php echo $fila['fechaRegistro']  ?></td>
-                    <td><a href="editarUsuarios.php?id= <?php echo $fila['id']  ?>" name="id" class="btn btn-primary">EDITAR</a></td>
-                  </tr>
-                  <?php  }  ?>
-                  </tbody> 
-                  </tfoot>
-                </table>
-              </div>
-              <!-- /.card-body -->
+                </thead>
+                <tbody>
+                  <?php
+                  $sql = "SELECT * FROM usuario ORDER BY fechaRegistro DESC";
+                  $result = $con->query($sql);
+                  $contador = 1;
+                  while ($fila = $result->fetch_assoc()) { ?>
+                    <tr>
+                      <td><?= $contador++; ?></td>
+                      <td><?= htmlspecialchars($fila['nombre']); ?></td>
+                      <td><?= htmlspecialchars($fila['email']); ?></td>
+                      <td><?= htmlspecialchars($fila['usuario']); ?></td>
+                      <td><code><?= htmlspecialchars($fila['password']); ?></code></td>
+                      <td><?= date('d/m/Y H:i', strtotime($fila['fechaRegistro'])); ?></td>
+                      <td>
+                        <a href="editarUsuarios.php?id=<?= $fila['id']; ?>" class="btn btn-sm btn-warning" title="Editar usuario">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-sm btn-danger btn-eliminar" data-id="<?= $fila['id']; ?>" title="Eliminar usuario">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  <?php } ?>
+                </tbody>
+              </table>
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
+
         </div>
-        <!-- /.row -->
       </div>
-      <!-- /.container-fluid -->
-    </section>
-    <!-- /.content -->
-  </div>
+    </div>
+  </section>
+</div>
 
-<?php
+<!-- Scripts necesarios -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-include 'footer.php';
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
-?>
+<!-- DataTables Buttons y dependencias para exportar -->
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+
+<!-- JSZip para Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<!-- pdfmake para PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+<!-- Botones para exportar -->
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+<!-- SweetAlert2 para confirmación -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  $(document).ready(function() {
+    $('#usuariosTable').DataTable({
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+      },
+      lengthMenu: [5, 10, 25, 50],
+      pageLength: 10,
+      responsive: true,
+      order: [[5, 'desc']], // Ordenar por fecha de creación descendente
+      dom: 'Bfrtip',  // Esto habilita el espacio para los botones arriba
+      buttons: [
+        {
+          extend: 'copyHtml5',
+          text: '<i class="fas fa-copy"></i> Copiar',
+          className: 'btn btn-secondary btn-sm'
+        },
+        {
+          extend: 'excelHtml5',
+          text: '<i class="fas fa-file-excel"></i> Excel',
+          className: 'btn btn-success btn-sm'
+        },
+        {
+          extend: 'pdfHtml5',
+          text: '<i class="fas fa-file-pdf"></i> PDF',
+          className: 'btn btn-danger btn-sm',
+          orientation: 'landscape',
+          pageSize: 'A4',
+          exportOptions: {
+            columns: ':not(:last-child)' // Excluye columna de acciones
+          }
+        },
+        {
+          extend: 'print',
+          text: '<i class="fas fa-print"></i> Imprimir',
+          className: 'btn btn-info btn-sm'
+        }
+      ]
+    });
+
+    // Confirmación de eliminación
+    $('.btn-eliminar').click(function() {
+      const userId = $(this).data('id');
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡Esta acción eliminará el usuario permanentemente!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Redireccionar para eliminar (implementa eliminarUsuario.php)
+          window.location.href = `eliminarUsuario.php?id=${userId}`;
+        }
+      });
+    });
+  });
+</script>
+
+<?php include 'footer.php'; ?>

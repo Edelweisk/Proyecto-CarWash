@@ -1,0 +1,95 @@
+/* Fondo general */
+body {
+  background: url('Imagenes/Fondo.png') no-repeat center center / cover;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+/* Contenedor general */
+.content-wrapper {
+  padding-bottom: 50px;
+}
+
+/* Título principal */
+h1 {
+  font-size: 2rem;
+  color: #0a3d62;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Tarjeta */
+.card {
+  background-color: #ffffffee;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* sombra suave */
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: scale(1.01);
+}
+
+/* Contenedor del formulario */
+.formulario-amplio {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 25px;
+}
+
+/* Etiquetas del formulario */
+.form-label {
+  font-weight: 600;
+  color: #0a3d62;
+  cursor: pointer;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+/* Inputs y select */
+input.form-control,
+select.form-select {
+  border-radius: 6px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: #fdfdfd;
+}
+
+input.form-control:focus,
+select.form-select:focus {
+  border-color: #009688;
+  box-shadow: 0 0 4px rgba(0, 150, 136, 0.3);
+  outline: none;
+}
+
+/* Botón principal */
+.btn-success {
+  background-color: #009688;
+  border: none;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-success:hover {
+  background-color: #00796b;
+  transform: translateY(-2px);
+}
+
+/* Responsive mínimo */
+@media (max-width: 768px) {
+  .formulario-amplio {
+    padding: 15px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+}

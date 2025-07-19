@@ -1,10 +1,13 @@
-<footer class="main-footer">
-    <strong>Copyright &copy; 2014-2021 <a href="https://adminlte.io">AdminLTE.io</a>.</strong>
-    All rights reserved.
-    <div class="float-right d-none d-sm-inline-block">
-      <b>Version</b> 3.2.0
-    </div>
-  </footer>
+<footer class="main-footer text-center text-sm-start">
+  <strong>&copy; <?php echo date('Y'); ?> <a href="index.php">Debug Car Wash</a>.</strong>
+  Todos los derechos reservados.
+  <div class="float-right d-none d-sm-inline-block">
+    <b>Versión</b> 1.0.0
+  </div>
+</footer>
+
+  <!-- Estilo Personal -->
+   <link rel="stylesheet" href="../CSS/FooterCSS/Footer.css">
 
   <!-- Control Sidebar -->
   <aside class="control-sidebar control-sidebar-dark">
