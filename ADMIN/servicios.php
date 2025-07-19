@@ -2,7 +2,6 @@
 require_once('../conexion.php');
 include 'header.php';
 
-// Consulta para obtener todos los servicios junto con el nombre del empleado
 $sql = "
     SELECT s.*, u.nombre AS empleado_nombre 
     FROM servicios s 
@@ -12,9 +11,11 @@ $sql = "
 $result = $con->query($sql);
 ?>
 
+<!-- Estilos específicos -->
 <link rel="stylesheet" href="../CSS/ServiciosCSS/Servicios.css" />
 
 <div class="content-wrapper">
+  <!-- Encabezado -->
   <section class="content-header">
     <div class="container-fluid">
       <div class="row mb-2 align-items-center">
@@ -22,17 +23,20 @@ $result = $con->query($sql);
           <h1>Listado de Servicios</h1>
         </div>
         <div class="col-sm-4 text-end">
-          <a href="CrearServicio.php" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Servicio</a>
+          <a href="crearServicio.php" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Servicio
+          </a>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- Tabla de servicios -->
   <section class="content">
     <div class="container-fluid">
       <div class="card card-outline card-primary">
-        <div class="card-body table-responsive p-0" style="max-height: 500px;">
-          <table class="table table-hover table-bordered text-nowrap">
+        <div class="card-body table-responsive">
+          <table id="tablaServicios" class="table table-bordered table-striped">
             <thead>
               <tr>
                 <th>ID</th>
@@ -47,19 +51,19 @@ $result = $con->query($sql);
               <?php if ($result && $result->num_rows > 0): ?>
                 <?php while ($fila = $result->fetch_assoc()): ?>
                   <tr>
-                    <td><?php echo htmlspecialchars($fila['id']); ?></td>
-                    <td><?php echo htmlspecialchars($fila['empleado_nombre'] ?? 'Desconocido'); ?></td>
-                    <td><?php echo htmlspecialchars($fila['tipo_carro']); ?></td>
-                    <td><?php echo htmlspecialchars($fila['placa']); ?></td>
-                    <td><?php echo date('d/m/Y H:i', strtotime($fila['fecha'])); ?></td>
+                    <td><?= htmlspecialchars($fila['id']) ?></td>
+                    <td><?= htmlspecialchars($fila['empleado_nombre'] ?? 'Desconocido') ?></td>
+                    <td><?= htmlspecialchars($fila['tipo_carro']) ?></td>
+                    <td><?= htmlspecialchars($fila['placa']) ?></td>
+                    <td><?= date('d/m/Y H:i', strtotime($fila['fecha'])) ?></td>
                     <td>
-                      <a href="detalleServicio.php?id=<?php echo $fila['id']; ?>" class="btn btn-info btn-sm" title="Ver Detalles">
+                      <a href="detalleServicio.php?id=<?= $fila['id']; ?>" class="btn btn-info btn-sm" title="Ver detalles">
                         <i class="fas fa-eye"></i>
                       </a>
-                      <a href="guardarServicio.php?id=<?php echo $fila['id']; ?>" class="btn btn-warning btn-sm" title="Editar Servicio">
+                      <a href="crearServicio.php?id=<?= $fila['id']; ?>" class="btn btn-warning btn-sm" title="Editar servicio">
                         <i class="fas fa-edit"></i>
                       </a>
-                      <a href="eliminarServicio.php?id=<?php echo $fila['id']; ?>" class="btn btn-danger btn-sm" title="Eliminar Servicio" onclick="return confirm('¿Seguro que desea eliminar este servicio?');">
+                      <a href="eliminarServicio.php?id=<?= $fila['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que desea eliminar este servicio?');" title="Eliminar servicio">
                         <i class="fas fa-trash-alt"></i>
                       </a>
                     </td>
@@ -77,5 +81,38 @@ $result = $con->query($sql);
     </div>
   </section>
 </div>
+
+<!-- DataTables con exportación -->
+<script>
+$(document).ready(function() {
+  $('#tablaServicios').DataTable({
+    dom: 'Bfrtip',
+    buttons: [
+      {
+        extend: 'excelHtml5',
+        text: '<i class="fas fa-file-excel"></i> Exportar Excel',
+        className: 'btn btn-success btn-sm'
+      },
+      {
+        extend: 'pdfHtml5',
+        text: '<i class="fas fa-file-pdf"></i> Exportar PDF',
+        className: 'btn btn-danger btn-sm'
+      }
+    ],
+    language: {
+      search: "Buscar:",
+      lengthMenu: "Mostrar _MENU_ registros",
+      zeroRecords: "No se encontraron registros",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+      paginate: {
+        first: "Primero",
+        last: "Último",
+        next: "Siguiente",
+        previous: "Anterior"
+      }
+    }
+  });
+});
+</script>
 
 <?php include 'footer.php'; ?>

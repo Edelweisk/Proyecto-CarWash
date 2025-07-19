@@ -1,0 +1,17 @@
+.table th {
+  background-color: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+}
+
+.card-title {
+  font-size: 1.25rem;
+}
+
+img.rounded-circle {
+  border: 3px solid #dee2e6;
+}
+
+.card-body {
+  padding: 2rem;
+}

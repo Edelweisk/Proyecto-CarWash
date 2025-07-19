@@ -7,18 +7,20 @@ include 'header.php';
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
 <!-- DataTables Buttons CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" />
-<!-- Estilo CSS -->
- <link rel="stylesheet" href="../CSS/EmpleadosCSS/Empleado.css" />
+<!-- Estilo CSS personalizado -->
+<link rel="stylesheet" href="../CSS/EmpleadosCSS/Empleado.css" />
 
 <div class="content-wrapper">
   <section class="content-header">
     <div class="container-fluid">
       <div class="row mb-2 align-items-center">
         <div class="col-sm-6">
-          <h1>Lista de Usuarios</h1>
+          <h1 class="fw-bold">Gestión de Empleados</h1>
         </div>
         <div class="col-sm-6 text-end">
-          <a href="Registrar_Empleado.php" class="btn btn-primary"><i class="fas fa-user-plus"></i> Crear Empleado</a>
+          <a href="Registrar_Empleado.php" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Nuevo Empleado
+          </a>
         </div>
       </div>
     </div>
@@ -29,17 +31,17 @@ include 'header.php';
       <div class="row">
         <div class="col-12">
 
-          <div class="card shadow-sm rounded">
+          <div class="card shadow-sm rounded border-0">
             <div class="card-body">
               <table id="usuariosTable" class="table table-striped table-bordered table-hover" style="width:100%">
-                <thead class="table-primary">
+                <thead class="table-primary text-center">
                   <tr>
                     <th>#</th>
                     <th>Nombre</th>
                     <th>Correo</th>
                     <th>Usuario</th>
-                    <th>Contraseña <small class="text-danger">(No recomendado mostrar)</small></th>
-                    <th>Fecha de Creación</th>
+                    <th class="text-danger">Contraseña</th>
+                    <th>Fecha de Registro</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -50,14 +52,14 @@ include 'header.php';
                   $contador = 1;
                   while ($fila = $result->fetch_assoc()) { ?>
                     <tr>
-                      <td><?= $contador++; ?></td>
+                      <td class="text-center"><?= $contador++; ?></td>
                       <td><?= htmlspecialchars($fila['nombre']); ?></td>
                       <td><?= htmlspecialchars($fila['email']); ?></td>
                       <td><?= htmlspecialchars($fila['usuario']); ?></td>
                       <td><code><?= htmlspecialchars($fila['password']); ?></code></td>
                       <td><?= date('d/m/Y H:i', strtotime($fila['fechaRegistro'])); ?></td>
-                      <td>
-                        <a href="editarUsuarios.php?id=<?= $fila['id']; ?>" class="btn btn-sm btn-warning" title="Editar usuario">
+                      <td class="text-center">
+                        <a href="editarUsuarios.php?id=<?= $fila['id']; ?>" class="btn btn-sm btn-warning me-1" title="Editar usuario">
                           <i class="fas fa-edit"></i>
                         </a>
                         <button class="btn btn-sm btn-danger btn-eliminar" data-id="<?= $fila['id']; ?>" title="Eliminar usuario">
@@ -79,27 +81,15 @@ include 'header.php';
 
 <!-- Scripts necesarios -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-<!-- DataTables JS -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
-<!-- DataTables Buttons y dependencias para exportar -->
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
-
-<!-- JSZip para Excel -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-<!-- pdfmake para PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-
-<!-- Botones para exportar -->
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-
-<!-- SweetAlert2 para confirmación -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -111,8 +101,8 @@ include 'header.php';
       lengthMenu: [5, 10, 25, 50],
       pageLength: 10,
       responsive: true,
-      order: [[5, 'desc']], // Ordenar por fecha de creación descendente
-      dom: 'Bfrtip',  // Esto habilita el espacio para los botones arriba
+      order: [[5, 'desc']],
+      dom: 'Bfrtip',
       buttons: [
         {
           extend: 'copyHtml5',
@@ -131,7 +121,7 @@ include 'header.php';
           orientation: 'landscape',
           pageSize: 'A4',
           exportOptions: {
-            columns: ':not(:last-child)' // Excluye columna de acciones
+            columns: ':not(:last-child)'
           }
         },
         {
@@ -156,7 +146,6 @@ include 'header.php';
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
-          // Redireccionar para eliminar (implementa eliminarUsuario.php)
           window.location.href = `eliminarUsuario.php?id=${userId}`;
         }
       });

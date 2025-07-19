@@ -2,8 +2,8 @@
 require_once('../conexion.php');
 include 'header.php';
 
-// Obtener ID de servicio desde GET, con valor por defecto 1 para pruebas
-$idServicio = $_GET['id'] ?? 1; 
+$idServicio = $_GET['id'] ?? 1;
+
 if (!is_numeric($idServicio)) {
     echo '<div class="alert alert-danger m-4">ID de servicio no válido.</div>';
     include 'footer.php';
@@ -12,9 +12,9 @@ if (!is_numeric($idServicio)) {
 
 $idServicio = (int) $idServicio;
 
-// Consulta segura con prepared statement
 $stmt = $con->prepare("
-    SELECT s.*, u.nombre AS empleado_nombre, u.email AS empleado_email, u.usuario AS empleado_usuario, u.imagen AS empleado_imagen
+    SELECT s.*, u.nombre AS empleado_nombre, u.email AS empleado_email, 
+           u.usuario AS empleado_usuario, u.imagen AS empleado_imagen
     FROM servicios s
     LEFT JOIN usuario u ON s.id_empleado = u.id
     WHERE s.id = ?
@@ -32,15 +32,22 @@ if ($result->num_rows === 0) {
 $servicio = $result->fetch_assoc();
 ?>
 
+       <!-- CSS -->
+        <link rel="stylesheet" href="../CSS/serviciosCSS/verservicio.css" />
+
 <div class="content-wrapper">
   <section class="content-header">
     <div class="container-fluid">
-      <div class="row mb-2 align-items-center">
+      <div class="row mb-3 align-items-center">
         <div class="col-sm-8">
-          <h1>Detalle del Servicio #<?php echo htmlspecialchars($servicio['id']); ?></h1>
+          <h1 class="text-primary">
+            Detalle del Servicio <small class="text-muted">#<?php echo htmlspecialchars($servicio['id']); ?></small>
+          </h1>
         </div>
         <div class="col-sm-4 text-end">
-          <a href="servicios.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver a Servicios</a>
+          <a href="servicios.php" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a Servicios
+          </a>
         </div>
       </div>
     </div>
@@ -49,48 +56,57 @@ $servicio = $result->fetch_assoc();
   <section class="content">
     <div class="container-fluid">
 
-      <div class="card card-outline card-primary">
-        <div class="card-header">
-          <h3 class="card-title">Información del Servicio</h3>
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white">
+          <h3 class="card-title">Información Detallada del Servicio</h3>
         </div>
         <div class="card-body">
 
-          <div class="row mb-3">
-            <div class="col-md-3 text-center">
+          <div class="row">
+            <!-- Imagen del Empleado -->
+            <div class="col-md-3 text-center mb-4">
               <?php
-              $imgPath = "../uploads/" . $servicio['empleado_imagen'];
-              if (!empty($servicio['empleado_imagen']) && file_exists($imgPath)):
+                $imgPath = "../uploads/" . $servicio['empleado_imagen'];
+                if (!empty($servicio['empleado_imagen']) && file_exists($imgPath)):
               ?>
-                <img src="<?php echo htmlspecialchars($imgPath); ?>" alt="Imagen empleado" class="img-fluid rounded-circle border" style="max-width: 150px;">
+                  <img src="<?= htmlspecialchars($imgPath); ?>" class="img-fluid rounded-circle shadow mb-2" style="max-width: 150px;" alt="Empleado">
               <?php else: ?>
-                <i class="fas fa-user-circle fa-9x text-muted"></i>
+                  <i class="fas fa-user-circle fa-9x text-muted mb-2"></i>
               <?php endif; ?>
-              <h5 class="mt-2"><?php echo htmlspecialchars($servicio['empleado_nombre'] ?? 'Empleado desconocido'); ?></h5>
-              <small class="text-muted"><?php echo htmlspecialchars($servicio['empleado_usuario'] ?? ''); ?></small><br>
-              <small class="text-muted"><?php echo htmlspecialchars($servicio['empleado_email'] ?? ''); ?></small>
+              <h5 class="fw-bold"><?= htmlspecialchars($servicio['empleado_nombre'] ?? 'Empleado desconocido'); ?></h5>
+              <p class="mb-0 text-muted"><?= htmlspecialchars($servicio['empleado_usuario'] ?? ''); ?></p>
+              <p class="text-muted"><?= htmlspecialchars($servicio['empleado_email'] ?? ''); ?></p>
             </div>
 
+            <!-- Datos del Servicio -->
             <div class="col-md-9">
-              <table class="table table-striped table-bordered">
+              <table class="table table-hover table-bordered table-striped">
                 <tbody>
                   <tr>
-                    <th>Tipo de carro</th>
-                    <td><?php echo htmlspecialchars($servicio['tipo_carro']); ?></td>
+                    <th style="width: 30%;">Tipo de Vehículo</th>
+                    <td><?= htmlspecialchars($servicio['tipo_carro']); ?></td>
                   </tr>
                   <tr>
-                    <th>Placa</th>
-                    <td><?php echo htmlspecialchars($servicio['placa']); ?></td>
+                    <th>Placa del Vehículo</th>
+                    <td><?= htmlspecialchars($servicio['placa']); ?></td>
                   </tr>
                   <tr>
-                    <th>Fecha y hora</th>
-                    <td><?php echo date('d/m/Y H:i:s', strtotime($servicio['fecha'])); ?></td>
+                    <th>Fecha y Hora del Servicio</th>
+                    <td><?= date('d/m/Y H:i:s', strtotime($servicio['fecha'])); ?></td>
                   </tr>
                   <tr>
                     <th>Observaciones</th>
-                    <td><?php echo nl2br(htmlspecialchars($servicio['observaciones'])); ?></td>
+                    <td><?= nl2br(htmlspecialchars($servicio['observaciones'])); ?></td>
                   </tr>
                 </tbody>
               </table>
+
+              <div class="text-end">
+                <a href="CrearServicio.php?id=<?= $servicio['id']; ?>" class="btn btn-warning">
+                  <i class="fas fa-edit"></i> Editar Servicio
+                </a>
+              </div>
+
             </div>
           </div>
 

@@ -60,7 +60,7 @@ for ($i = 6; $i >= 0; $i--) {
   <!-- Botones rápidos -->
   <section class="mb-4" data-aos="fade-up">
     <div class="container-fluid d-flex gap-3 flex-wrap">
-      <a href="servicios.php?action=new" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Servicio</a>
+      <a href="CrearServicio.php?action=new" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Servicio</a>
       <a href="usuarios.php?action=new" class="btn btn-success"><i class="fas fa-user-plus"></i> Nuevo Usuario</a>
       <a href="usuarios.php?rol=Lavador" class="btn btn-info"><i class="fas fa-user-cog"></i> Ver Lavadores</a>
       <a href="reportes.php" class="btn btn-warning"><i class="fas fa-chart-line"></i> Reportes</a>
@@ -104,7 +104,7 @@ for ($i = 6; $i >= 0; $i--) {
               <p>Lavadores activos</p>
             </div>
             <div class="icon"><i class="fas fa-user-cog"></i></div>
-            <a href="usuarios.php?rol=Lavador" class="small-box-footer">Ver lavadores <i class="fas fa-arrow-circle-right"></i></a>
+            <a href="lavadoresactivos.php?rol=Lavador" class="small-box-footer">Ver lavadores <i class="fas fa-arrow-circle-right"></i></a>
           </div>
         </div>
 
@@ -124,9 +124,10 @@ for ($i = 6; $i >= 0; $i--) {
               </h3>
               <p>Servicios hoy</p>
             </div>
-            <div class="icon"><i class="fas fa-calendar-day"></i></div>
-            <span class="small-box-footer text-muted">Resumen diario</span>
+          <div class="icon"><i class="fas fa-user-cog"></i></div>
+            <a href="resumendiario.php?rol=Lavador" class="small-box-footer">Ver resumen diario <i class="fas fa-arrow-circle-right"></i></a>
           </div>
+          
         </div>
 
       </div>

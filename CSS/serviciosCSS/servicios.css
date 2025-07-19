@@ -126,3 +126,20 @@
 .text-muted {
   color: #6c757d !important;
 }
+
+#tablaServicios {
+  font-size: 15px;
+}
+
+#tablaServicios th, #tablaServicios td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+#tablaServicios .btn {
+  margin: 0 2px;
+}
+
+.dataTables_wrapper .dt-buttons {
+  margin-bottom: 10px;
+}
