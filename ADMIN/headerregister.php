@@ -22,7 +22,7 @@
 <body>
   <nav class="navbar navbar-expand-md navbar-light bg-light border-bottom">
     <div class="container">
-      <a href="#" class="navbar-brand d-flex align-items-center">
+      <a href="index.php" class="navbar-brand d-flex align-items-center">
         <img
           src="../CSS/CSSlogin/Imagenes/LogoCarWash.png"
           alt="Logo"
