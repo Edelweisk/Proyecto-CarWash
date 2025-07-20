@@ -42,13 +42,10 @@ if (isset($_REQUEST['btn_registrar'])) {
             }
         }
 
-        // Hashear la contraseña para mayor seguridad
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-
         // Insertar datos en la BD con prepared statement
         $insert = $con->prepare("INSERT INTO usuario (nombre, fecha_nacimiento, lugar_nacimiento, numero_identificacion, nacionalidad, estado_civil, direccion, telefono, numero_emergencia, email, usuario, password, rol, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-        $insert->bind_param("ssssssssssssss", $nombre, $fecha_nacimiento, $lugar_nacimiento, $numero_identificacion, $nacionalidad, $estado_civil, $direccion, $telefono, $numero_emergencia, $email, $usuario, $passwordHash, $rol, $imgFinal);
+        $insert->bind_param("ssssssssssssss", $nombre, $fecha_nacimiento, $lugar_nacimiento, $numero_identificacion, $nacionalidad, $estado_civil, $direccion, $telefono, $numero_emergencia, $email, $usuario, $password, $rol, $imgFinal);
 
         if ($insert->execute()) {
             echo "<script>alert('Empleado registrado correctamente');</script>";

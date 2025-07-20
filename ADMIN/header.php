@@ -189,6 +189,13 @@ $activo_crearUsuarios = ($pagina === 'crearUsuarios.php') ? 'active' : '';
           </li>
 
           <li class="nav-item">
+            <a href="serviciosofrecidos.php" class="nav-link">
+              <i class="nav-icon fas fa-circle"></i>
+              <p>Servicios disponibles</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
             <a href="salir.php" class="nav-link">
               <i class="nav-icon fas fa-sign-out-alt"></i>
               <p>Cerrar Sesión</p>

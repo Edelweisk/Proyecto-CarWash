@@ -12,11 +12,19 @@ if (!is_numeric($idServicio)) {
 
 $idServicio = (int) $idServicio;
 
+// Consulta mejorada con JOIN para obtener tipo_lavado con nombre y precio, además de empleado
 $stmt = $con->prepare("
-    SELECT s.*, u.nombre AS empleado_nombre, u.email AS empleado_email, 
-           u.usuario AS empleado_usuario, u.imagen AS empleado_imagen
+    SELECT 
+        s.*, 
+        u.nombre AS empleado_nombre, 
+        u.email AS empleado_email, 
+        u.usuario AS empleado_usuario, 
+        u.imagen AS empleado_imagen,
+        t.nombre AS tipo_lavado_nombre,
+        t.precio AS tipo_lavado_precio
     FROM servicios s
     LEFT JOIN usuario u ON s.id_empleado = u.id
+    LEFT JOIN tipo_lavado t ON s.id_tipo_lavado = t.id
     WHERE s.id = ?
 ");
 $stmt->bind_param('i', $idServicio);
@@ -32,8 +40,8 @@ if ($result->num_rows === 0) {
 $servicio = $result->fetch_assoc();
 ?>
 
-       <!-- CSS -->
-        <link rel="stylesheet" href="../CSS/serviciosCSS/verservicio.css" />
+<!-- CSS -->
+<link rel="stylesheet" href="../CSS/serviciosCSS/verservicio.css" />
 
 <div class="content-wrapper">
   <section class="content-header">
@@ -41,7 +49,7 @@ $servicio = $result->fetch_assoc();
       <div class="row mb-3 align-items-center">
         <div class="col-sm-8">
           <h1 class="text-primary">
-            Detalle del Servicio <small class="text-muted">#<?php echo htmlspecialchars($servicio['id']); ?></small>
+            Detalle del Servicio <small class="text-muted">#<?= htmlspecialchars($servicio['id']); ?></small>
           </h1>
         </div>
         <div class="col-sm-4 text-end">
@@ -83,7 +91,15 @@ $servicio = $result->fetch_assoc();
               <table class="table table-hover table-bordered table-striped">
                 <tbody>
                   <tr>
-                    <th style="width: 30%;">Tipo de Vehículo</th>
+                    <th style="width: 30%;">Tipo de Lavado</th>
+                    <td><?= htmlspecialchars($servicio['tipo_lavado_nombre'] ?? 'N/A'); ?></td>
+                  </tr>
+                  <tr>
+                    <th>Precio</th>
+                    <td>$<?= number_format($servicio['tipo_lavado_precio'] ?? 0, 2); ?></td>
+                  </tr>
+                  <tr>
+                    <th>Tipo de Vehículo</th>
                     <td><?= htmlspecialchars($servicio['tipo_carro']); ?></td>
                   </tr>
                   <tr>
@@ -95,14 +111,22 @@ $servicio = $result->fetch_assoc();
                     <td><?= date('d/m/Y H:i:s', strtotime($servicio['fecha'])); ?></td>
                   </tr>
                   <tr>
+                    <th>Estado</th>
+                    <td><?= ucfirst(htmlspecialchars($servicio['estado'])); ?></td>
+                  </tr>
+                  <tr>
+                    <th>Método de Pago</th>
+                    <td><?= ucfirst(htmlspecialchars($servicio['metodo_pago'] ?? 'No especificado')); ?></td>
+                  </tr>
+                  <tr>
                     <th>Observaciones</th>
-                    <td><?= nl2br(htmlspecialchars($servicio['observaciones'])); ?></td>
+                    <td><?= nl2br(htmlspecialchars($servicio['observaciones'] ?? '-')); ?></td>
                   </tr>
                 </tbody>
               </table>
 
               <div class="text-end">
-                <a href="CrearServicio.php?id=<?= $servicio['id']; ?>" class="btn btn-warning">
+                <a href="crearServicio.php?id=<?= $servicio['id']; ?>" class="btn btn-warning">
                   <i class="fas fa-edit"></i> Editar Servicio
                 </a>
               </div>

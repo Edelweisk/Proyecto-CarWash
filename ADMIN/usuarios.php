@@ -5,9 +5,7 @@ include 'header.php';
 
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
-<!-- DataTables Buttons CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" />
-<!-- Estilo CSS personalizado -->
 <link rel="stylesheet" href="../CSS/EmpleadosCSS/Empleado.css" />
 
 <div class="content-wrapper">
@@ -30,18 +28,27 @@ include 'header.php';
     <div class="container-fluid">
       <div class="row">
         <div class="col-12">
-
           <div class="card shadow-sm rounded border-0">
             <div class="card-body">
               <table id="usuariosTable" class="table table-striped table-bordered table-hover" style="width:100%">
                 <thead class="table-primary text-center">
                   <tr>
                     <th>#</th>
+                    <th>Foto</th>
                     <th>Nombre</th>
+                    <th>Fecha Nacimiento</th>
+                    <th>Identificación</th>
+                    <th>Nacionalidad</th>
+                    <th>Estado Civil</th>
+                    <th>Dirección</th>
+                    <th>Teléfono</th>
+                    <th>Emergencia</th>
                     <th>Correo</th>
                     <th>Usuario</th>
                     <th class="text-danger">Contraseña</th>
-                    <th>Fecha de Registro</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Registro</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -50,13 +57,31 @@ include 'header.php';
                   $sql = "SELECT * FROM usuario ORDER BY fechaRegistro DESC";
                   $result = $con->query($sql);
                   $contador = 1;
-                  while ($fila = $result->fetch_assoc()) { ?>
+                  while ($fila = $result->fetch_assoc()) {
+                    $foto = !empty($fila['imagen']) && file_exists("../IMG/usuarios/" . $fila['imagen'])
+                      ? "../IMG/usuarios/" . $fila['imagen']
+                      : "../IMG/usuarios/default.png";
+                  ?>
                     <tr>
                       <td class="text-center"><?= $contador++; ?></td>
+                      <td class="text-center"><img src="<?= $foto ?>" alt="Foto" width="50" height="50" class="rounded-circle"></td>
                       <td><?= htmlspecialchars($fila['nombre']); ?></td>
+                      <td><?= date('d/m/Y', strtotime($fila['fecha_nacimiento'])); ?></td>
+                      <td><?= htmlspecialchars($fila['numero_identificacion']); ?></td>
+                      <td><?= htmlspecialchars($fila['nacionalidad']); ?></td>
+                      <td><?= htmlspecialchars($fila['estado_civil']); ?></td>
+                      <td><?= htmlspecialchars($fila['direccion']); ?></td>
+                      <td><?= htmlspecialchars($fila['telefono']); ?></td>
+                      <td><?= htmlspecialchars($fila['numero_emergencia']); ?></td>
                       <td><?= htmlspecialchars($fila['email']); ?></td>
                       <td><?= htmlspecialchars($fila['usuario']); ?></td>
                       <td><code><?= htmlspecialchars($fila['password']); ?></code></td>
+                      <td><?= htmlspecialchars($fila['rol']); ?></td>
+                      <td>
+                        <span class="badge bg-<?= $fila['estado'] === 'activo' ? 'success' : 'secondary'; ?>">
+                          <?= ucfirst($fila['estado']); ?>
+                        </span>
+                      </td>
                       <td><?= date('d/m/Y H:i', strtotime($fila['fechaRegistro'])); ?></td>
                       <td class="text-center">
                         <a href="editarUsuarios.php?id=<?= $fila['id']; ?>" class="btn btn-sm btn-warning me-1" title="Editar usuario">
@@ -72,7 +97,6 @@ include 'header.php';
               </table>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -101,7 +125,7 @@ include 'header.php';
       lengthMenu: [5, 10, 25, 50],
       pageLength: 10,
       responsive: true,
-      order: [[5, 'desc']],
+      order: [[15, 'desc']],
       dom: 'Bfrtip',
       buttons: [
         {
@@ -132,7 +156,6 @@ include 'header.php';
       ]
     });
 
-    // Confirmación de eliminación
     $('.btn-eliminar').click(function() {
       const userId = $(this).data('id');
       Swal.fire({
