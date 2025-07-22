@@ -1,0 +1,135 @@
+/* ===== Estilos para Editar Usuario - Versión Mejorada ===== */
+
+.editar-user-card {
+  max-width: 800px;
+  width: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 123, 255, 0.25);
+  padding: 2.5rem;
+  margin: 3rem auto 10rem auto;
+  animation: fadeInUp 0.8s ease-in-out;
+  transition: all 0.3s ease;
+}
+
+.editar-user-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px rgba(0, 123, 255, 0.35);
+}
+
+.editar-user-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  background-color: #dee2e6;
+  display: block;
+  margin: 0 auto 1.5rem auto;
+}
+
+/* Diseño de inputs en fila */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #102a43;
+  margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-control-file {
+  border-radius: 12px;
+  border: 1px solid #ced4da;
+  padding: 10px 14px;
+  font-size: 1rem;
+  background-color: #ffffffcc;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control:focus,
+.form-control-file:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.4);
+  outline: none;
+}
+
+/* Botones */
+.btn {
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-success {
+  background-color: #28a745;
+  border: none;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border: none;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+/* Animación de entrada */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+  }
+
+  .editar-user-card {
+    padding: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .editar-user-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .form-group {
+    min-width: 100%;
+  }
+}

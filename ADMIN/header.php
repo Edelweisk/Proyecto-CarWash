@@ -1,6 +1,9 @@
 <?php
 require_once('../conexion.php');
 session_start();
+include '../control.php';
+
+
 
 // Validar sesión activa
 if (!isset($_SESSION['id_usuario'])) {
@@ -8,12 +11,14 @@ if (!isset($_SESSION['id_usuario'])) {
     exit();
 }
 
-// Obtener los datos del usuario actual
 $id = $_SESSION['id_usuario'];
-$sql = "SELECT nombre, email, usuario, imagen FROM usuario WHERE id = '$id'";
-$resultado = $con->query($sql);
 
-// Valores por defecto
+// Sentencia preparada para evitar inyección SQL
+$stmt = $con->prepare("SELECT nombre, email, usuario, imagen FROM usuario WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$resultado = $stmt->get_result();
+
 $nombre = "Usuario";
 $email = "";
 $usuario = "";
@@ -24,195 +29,185 @@ if ($fila = $resultado->fetch_assoc()) {
     $email   = $fila['email'];
     $usuario = $fila['usuario'];
 
-    // Verificar si la imagen existe y no está vacía
     if (!empty($fila['imagen']) && file_exists("../IMG/usuarios/" . $fila['imagen'])) {
         $imagen = $fila['imagen'];
     }
 }
+
+$stmt->close();
+
+// Variables para menú activo
+$pagina = basename($_SERVER['PHP_SELF']);
+$activo_dashboard = ($pagina === 'index.php') ? 'active' : '';
+$activo_usuarios = ($pagina === 'usuarios.php') ? 'active' : '';
+$activo_crearUsuarios = ($pagina === 'crearUsuarios.php') ? 'active' : '';
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AdminLTE 3 | Dashboard</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Debug Car Wash | Dashboard</title>
 
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
-  <!-- Ionicons -->
-  <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-  <!-- Tempusdominus Bootstrap 4 -->
-  <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
-  <!-- iCheck -->
-  <link rel="stylesheet" href="plugins/icheck-bootstrap/icheck-bootstrap.min.css">
-  <!-- JQVMap -->
-  <link rel="stylesheet" href="plugins/jqvmap/jqvmap.min.css">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="dist/css/adminlte.min.css">
-  <!-- overlayScrollbars -->
-  <link rel="stylesheet" href="plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
-  <!-- Daterange picker -->
-  <link rel="stylesheet" href="plugins/daterangepicker/daterangepicker.css">
-  <!-- summernote -->
-  <link rel="stylesheet" href="plugins/summernote/summernote-bs4.min.css">
+  <!-- Fuentes y estilos -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback" />
+  <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css" />
+  <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" />
+  <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css" />
+  <link rel="stylesheet" href="plugins/icheck-bootstrap/icheck-bootstrap.min.css" />
+  <link rel="stylesheet" href="plugins/jqvmap/jqvmap.min.css" />
+  <link rel="stylesheet" href="dist/css/adminlte.min.css" />
+  <link rel="stylesheet" href="../CSS/headerCSS/Header.css" />
+  <link rel="stylesheet" href="plugins/overlayScrollbars/css/OverlayScrollbars.min.css" />
+  <link rel="stylesheet" href="plugins/daterangepicker/daterangepicker.css" />
+  <link rel="stylesheet" href="plugins/summernote/summernote-bs4.min.css" />
+  <link rel="stylesheet" href="plugins/datatables-bs4/css/dataTables.bootstrap4.min.css" />
+  <link rel="stylesheet" href="plugins/datatables-responsive/css/responsive.bootstrap4.min.css" />
+  <link rel="stylesheet" href="plugins/datatables-buttons/css/buttons.bootstrap4.min.css" />
+  <link rel="stylesheet" href="../CSS/custom-admin.css" />
+  <style>
+    /* Quitar flecha desplegable del título Gestión de Empleados */
+    .nav-item.menu-open > p.nav-link > i.right.fas.fa-angle-left {
+      display: none !important;
+    }
 
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
-  <!-- DataTables -->
-  <link rel="stylesheet" href="plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
-  <link rel="stylesheet" href="plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
-  <link rel="stylesheet" href="plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="dist/css/adminlte.min.css">
+    /* Cursor normal y sin interacción */
+    .nav-item.menu-open > p.nav-link {
+      cursor: default !important;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 
-  <!-- Preloader -->
   <div class="preloader flex-column justify-content-center align-items-center">
-    <img class="animation__shake" src="dist/img/AdminLTELogo.png" alt="AdminLTELogo" height="60" width="60">
+    <img class="animation__shake" src="../CSS/CSSlogin/Imagenes/LogoCarWash.PNG" alt="Debug Car Wash Logo" height="60" width="60" />
   </div>
 
-  <!-- Navbar -->
+  <!-- Navbar principal -->
   <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-
-    <!-- Right navbar links -->
-    <ul class="navbar-nav ml-auto">
-      <!-- Navbar Search -->
+    <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link" data-widget="navbar-search" href="#" role="button">
-          <i class="fas fa-search"></i>
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button" title="Colapsar menú lateral">
+          <i class="fas fa-bars"></i>
         </a>
-        <div class="navbar-search-block">
-          <form class="form-inline">
-            <div class="input-group input-group-sm">
-              <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
-              <div class="input-group-append">
-                <button class="btn btn-navbar" type="submit">
-                  <i class="fas fa-search"></i>
-                </button>
-                <button class="btn btn-navbar" type="button" data-widget="navbar-search">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
       </li>
+    </ul>
+
+    <ul class="navbar-nav ml-auto">
+  
 
       <li class="nav-item">
-        <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+        <a class="nav-link" data-widget="fullscreen" href="#" role="button" title="Pantalla completa">
           <i class="fas fa-expand-arrows-alt"></i>
         </a>
       </li>
+
       <li class="nav-item">
-     
-      <a href="salir.php" class="nav-link"><i class="fas fa-sign-out-alt">Salir</i></a>
-   
+        <a href="salir.php" class="nav-link" title="Cerrar sesión">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </a>
       </li>
     </ul>
   </nav>
-  <!-- /.navbar -->
 
-  <!-- Main Sidebar Container -->
+  <!-- Sidebar -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <!-- Brand Logo -->
-    <a href="index.php" class="brand-link">
-      <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-      <span class="brand-text font-weight-light">ADMIN</span>
+    <a href="index.php" class="brand-link d-flex align-items-center">
+      <img src="../CSS/CSSlogin/Imagenes/LogoCarWash.png" alt="Debug Car Wash Logo" class="brand-image img-circle elevation-3" style="opacity: 0.8; width: 35px; height: 35px" />
+      <span class="brand-text font-weight-light ml-2">Debug Car Wash</span>
     </a>
 
-    <!-- Sidebar -->
     <div class="sidebar">
-      <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex align-items-center">
         <div class="image me-2">
-         <img src="../IMG/usuarios/<?php echo (!empty($imagen) ? $imagen : 'default.png'); ?>" 
-          class="img-circle elevation-2" 
-          alt="User Image" 
-          style="width: 40px; height: 50px;">
+          <img src="../IMG/usuarios/<?php echo htmlspecialchars($imagen, ENT_QUOTES, 'UTF-8'); ?>" class="img-circle elevation-2" alt="Imagen de usuario" style="width: 40px; height: 50px" />
         </div>
         <div class="info">
-          <a href="#" class="d-block" style="margin-left: 0;"><?php echo $_SESSION['nombre']; ?></a>
+          <a href="#" class="d-block" style="margin-left: 0;"><?php echo htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8'); ?></a>
         </div>
       </div>
 
-      <!-- SidebarSearch Form -->
       <div class="form-inline">
         <div class="input-group" data-widget="sidebar-search">
-          <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+          <input class="form-control form-control-sidebar" type="search" placeholder="Buscar" aria-label="Buscar" />
           <div class="input-group-append">
-            <button class="btn btn-sidebar">
+            <button class="btn btn-sidebar" title="Buscar">
               <i class="fas fa-search fa-fw"></i>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Sidebar Menu -->
       <nav class="mt-2">
-        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-          <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
-          <li class="nav-item menu-open">
-            <a href="index.php" class="nav-link active">
-              <i class="nav-icon fas fa-tachometer-alt"></i>
-              <p>
-                Dashboard
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-          </li>
+        <ul class="nav nav-pills nav-sidebar flex-column" role="menu" data-accordion="false">
           <li class="nav-item">
-            <a href="" class="nav-link">
-              <i class="nav-icon fas fa-th"></i>
-              <p>
-                Widgets
-                <span class="right badge badge-danger">New</span>
-              </p>
+            <a href="index.php" class="nav-link <?php echo $activo_dashboard; ?>">
+              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <p>Dashboard</p>
             </a>
           </li>
-
-                <li class="nav-item menu-open">
-            <a href="usuarios.php" class="nav-link">
-              <i class="nav-icon fas fa-copy"></i>
-              <p>
-                Gestor de Usuarios
-                <i class="fas fa-angle-left right"></i>
-                <span class="badge badge-info right"></span>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
+<?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
+          <li class="nav-item menu-open">
+            <p class="nav-link <?php echo ($activo_usuarios || $activo_crearUsuarios) ? 'active' : ''; ?>">
+              <i class="nav-icon fas fa-users-cog"></i>
+              Gestión de Empleados
+            </p>
+            <ul class="nav nav-treeview" style="display: block;">
               <li class="nav-item">
-                <a href="usuarios.php" class="nav-link">
+                <a href="usuarios.php" class="nav-link <?php echo $activo_usuarios; ?>">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Listas de Usuarios</p>
-                </a>
-                    <a href="crearUsuarios.php" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Crear Usuarios</p>
+                  <p>Lista de Empleados</p>
                 </a>
               </li>
-  
+              <li class="nav-item">
+                <a href="Registrar_Empleado.php" class="nav-link <?php echo $activo_crearUsuarios; ?>">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Agregar Nuevo Empleado</p>
+                </a>
+              </li>
             </ul>
-
-               <li class="nav-item">
-                <a href="salir.php" class="nav-link">
+          </li>
+<?php endif; ?>
+          <li class="nav-item">
+            <a href="serviciosofrecidos.php" class="nav-link">
+              <i class="nav-icon fas fa-circle"></i>
+              <p>Servicios disponibles</p>
+            </a>
+          </li>
+<?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
+             <li class="nav-item">
+            <a href="asignarsueldo.php" class="nav-link">
+              <i class="nav-icon fas fa-circle"></i>
+              <p>Economico</p>
+            </a>
+          </li>
+<?php endif; ?>
+          <li class="nav-item">
+            <a href="salir.php" class="nav-link">
               <i class="nav-icon fas fa-sign-out-alt"></i>
-              <p>
-                Salir del Sistema
-                <i></i>
-              </p>
+              <p>Cerrar Sesión</p>
             </a>
           </li>
         </ul>
       </nav>
-      <!-- /.sidebar-menu -->
     </div>
-    <!-- /.sidebar -->
   </aside>
+
+</div>
+
+<!-- Scripts -->
+<script src="plugins/jquery/jquery.min.js"></script>
+<script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="dist/js/adminlte.min.js"></script>
+<script>
+  $(function () {
+    // Inicializa pushmenu para el sidebar
+    $('[data-widget="pushmenu"]').PushMenu();
+  });
+</script>
+</body>
+</html>
