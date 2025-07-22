@@ -1,6 +1,7 @@
 <?php 
 include_once "../conexion.php";
 include 'header.php'; 
+include '../control.php';
 
 if (isset($_POST['btn_registrar'])) {
     $nombre   = $_POST['nombre'];

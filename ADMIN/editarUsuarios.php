@@ -1,6 +1,7 @@
 <?php
 require_once('../conexion.php');
 include 'header.php';
+include '../control.php';
 
 $id = isset($_GET['id']) && is_numeric($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($id === 0) {

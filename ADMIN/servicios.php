@@ -13,9 +13,9 @@ $result = $con->query($sql);
 
 <!-- Estilos específicos -->
 <link rel="stylesheet" href="../CSS/ServiciosCSS/Servicios.css" />
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="content-wrapper">
-  <!-- Encabezado -->
   <section class="content-header">
     <div class="container-fluid">
       <div class="row mb-2 align-items-center">
@@ -31,7 +31,6 @@ $result = $con->query($sql);
     </div>
   </section>
 
-  <!-- Tabla de servicios -->
   <section class="content">
     <div class="container-fluid">
       <div class="card card-outline card-primary">
@@ -50,7 +49,7 @@ $result = $con->query($sql);
             <tbody>
               <?php if ($result && $result->num_rows > 0): ?>
                 <?php while ($fila = $result->fetch_assoc()): ?>
-                  <tr>
+                  <tr id="fila-<?= $fila['id'] ?>">
                     <td><?= htmlspecialchars($fila['id']) ?></td>
                     <td><?= htmlspecialchars($fila['empleado_nombre'] ?? 'Desconocido') ?></td>
                     <td><?= htmlspecialchars($fila['tipo_carro']) ?></td>
@@ -63,16 +62,16 @@ $result = $con->query($sql);
                       <a href="crearServicio.php?id=<?= $fila['id']; ?>" class="btn btn-warning btn-sm" title="Editar servicio">
                         <i class="fas fa-edit"></i>
                       </a>
-                      <a href="eliminarServicio.php?id=<?= $fila['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que desea eliminar este servicio?');" title="Eliminar servicio">
+                      <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
+                      <button class="btn btn-danger btn-sm" onclick="confirmarEliminacion(<?= $fila['id']; ?>)" title="Eliminar servicio">
                         <i class="fas fa-trash-alt"></i>
-                      </a>
+                      </button>
+                      <?php endif; ?>
                     </td>
                   </tr>
                 <?php endwhile; ?>
               <?php else: ?>
-                <tr>
-                  <td colspan="6" class="text-center">No hay servicios registrados.</td>
-                </tr>
+                <tr><td colspan="6" class="text-center">No hay servicios registrados.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -82,7 +81,6 @@ $result = $con->query($sql);
   </section>
 </div>
 
-<!-- DataTables con exportación -->
 <script>
 $(document).ready(function() {
   $('#tablaServicios').DataTable({
@@ -113,6 +111,38 @@ $(document).ready(function() {
     }
   });
 });
+
+// Función real para confirmar y eliminar servicio
+function confirmarEliminacion(id) {
+  Swal.fire({
+    title: '¿Eliminar este servicio?',
+    text: "Esta acción no se puede deshacer.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Llamada AJAX para eliminar
+      fetch('eliminarServicio.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id=' + id
+      })
+      .then(res => res.text())
+      .then(data => {
+        if (data === 'ok') {
+          document.getElementById('fila-' + id).remove();
+          Swal.fire('Eliminado', 'El servicio fue eliminado correctamente.', 'success');
+        } else {
+          Swal.fire('Error', 'Hubo un problema al eliminar el servicio.', 'error');
+        }
+      });
+    }
+  });
+}
 </script>
 
 <?php include 'footer.php'; ?>

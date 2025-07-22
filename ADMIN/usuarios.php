@@ -22,6 +22,7 @@ include 'header.php';
         </div>
       </div>
     </div>
+    
   </section>
 
   <section class="content">
@@ -137,21 +138,6 @@ include 'header.php';
           extend: 'excelHtml5',
           text: '<i class="fas fa-file-excel"></i> Excel',
           className: 'btn btn-success btn-sm'
-        },
-        {
-          extend: 'pdfHtml5',
-          text: '<i class="fas fa-file-pdf"></i> PDF',
-          className: 'btn btn-danger btn-sm',
-          orientation: 'landscape',
-          pageSize: 'A4',
-          exportOptions: {
-            columns: ':not(:last-child)'
-          }
-        },
-        {
-          extend: 'print',
-          text: '<i class="fas fa-print"></i> Imprimir',
-          className: 'btn btn-info btn-sm'
         }
       ]
     });
@@ -174,6 +160,8 @@ include 'header.php';
       });
     });
   });
+
+  
 </script>
 
 <?php include 'footer.php'; ?>

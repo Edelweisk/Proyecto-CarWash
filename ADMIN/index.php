@@ -60,10 +60,15 @@ for ($i = 6; $i >= 0; $i--) {
   <!-- Botones rápidos -->
   <section class="mb-4" data-aos="fade-up">
     <div class="container-fluid d-flex gap-3 flex-wrap">
+       <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
       <a href="CrearServicio.php?action=new" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Servicio</a>
-      <a href="usuarios.php?action=new" class="btn btn-success"><i class="fas fa-user-plus"></i> Nuevo Usuario</a>
-      <a href="usuarios.php?rol=Lavador" class="btn btn-info"><i class="fas fa-user-cog"></i> Ver Lavadores</a>
+      <a href="Registrar_Empleado.php" class="btn btn-success"><i class="fas fa-user-plus"></i> Nuevo Usuario</a>
+      <?php endif; ?>
+      <a href="lavadoresactivos.php" class="btn btn-info"><i class="fas fa-user-cog"></i> Ver Lavadores</a>
+            <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
+
       <a href="reportes.php" class="btn btn-warning"><i class="fas fa-chart-line"></i> Reportes</a>
+      <?php endif; ?>
     </div>
   </section>
 
@@ -84,7 +89,7 @@ for ($i = 6; $i >= 0; $i--) {
           </div>
         </div>
 
-        <!-- Total Usuarios -->
+        <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
         <div class="col-lg-3 col-6" data-aos="zoom-in">
           <div class="small-box bg-success">
             <div class="inner">
@@ -95,7 +100,7 @@ for ($i = 6; $i >= 0; $i--) {
             <a href="usuarios.php" class="small-box-footer">Gestionar usuarios <i class="fas fa-arrow-circle-right"></i></a>
           </div>
         </div>
-
+<?php endif; ?>
         <!-- Lavadores -->
         <div class="col-lg-3 col-6" data-aos="zoom-in">
           <div class="small-box bg-info">

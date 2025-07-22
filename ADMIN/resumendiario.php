@@ -12,14 +12,14 @@ $stmtTotal->execute();
 $resTotal = $stmtTotal->get_result()->fetch_assoc();
 $totalServiciosHoy = $resTotal['total'] ?? 0;
 
-// Servicios por tipo
+// Servicios por tipo de carro
 $sqlServiciosTipo = "SELECT tipo_carro, COUNT(*) as cantidad FROM servicios WHERE DATE(fecha) = ? GROUP BY tipo_carro";
 $stmtTipo = $con->prepare($sqlServiciosTipo);
 $stmtTipo->bind_param("s", $hoy);
 $stmtTipo->execute();
 $resultTipo = $stmtTipo->get_result();
 
-// Lavadores activos
+// Lavadores activos (distintos empleados que realizaron servicios hoy)
 $sqlLavadoresActivos = "SELECT COUNT(DISTINCT id_empleado) AS activos FROM servicios WHERE DATE(fecha) = ?";
 $stmtLavadores = $con->prepare($sqlLavadoresActivos);
 $stmtLavadores->bind_param("s", $hoy);
@@ -27,13 +27,26 @@ $stmtLavadores->execute();
 $resLavadores = $stmtLavadores->get_result()->fetch_assoc();
 $lavadoresActivosHoy = $resLavadores['activos'] ?? 0;
 
-// Detalle de servicios
+// Total ingresos del día (sumando el precio del tipo de lavado)
+$sqlIngresos = "
+  SELECT SUM(tl.precio) AS total_ingresos
+  FROM servicios s
+  JOIN tipo_lavado tl ON s.id_tipo_lavado = tl.id
+  WHERE DATE(s.fecha) = ?
+";
+$stmtIngresos = $con->prepare($sqlIngresos);
+$stmtIngresos->bind_param("s", $hoy);
+$stmtIngresos->execute();
+$resIngresos = $stmtIngresos->get_result()->fetch_assoc();
+$totalIngresosHoy = $resIngresos['total_ingresos'] ?? 0.00;
+
+// Detalle de servicios realizados hoy
 $sqlServiciosHoy = "
-    SELECT s.id, s.tipo_carro, s.placa, s.fecha, s.observaciones, u.nombre as lavador
-    FROM servicios s
-    JOIN usuario u ON s.id_empleado = u.id
-    WHERE DATE(s.fecha) = ?
-    ORDER BY s.fecha DESC
+  SELECT s.id, s.tipo_carro, s.placa, s.fecha, s.observaciones, u.nombre as lavador
+  FROM servicios s
+  JOIN usuario u ON s.id_empleado = u.id
+  WHERE DATE(s.fecha) = ?
+  ORDER BY s.fecha DESC
 ";
 $stmtServiciosHoy = $con->prepare($sqlServiciosHoy);
 $stmtServiciosHoy->bind_param("s", $hoy);
@@ -46,14 +59,14 @@ $resultServiciosHoy = $stmtServiciosHoy->get_result();
 <div class="content-wrapper">
   <section class="content-header">
     <h1>Resumen Diario <small><?= date('d/m/Y') ?></small></h1>
-    <button class="btn btn-primary float-right mt-2" onclick="window.print()">
+    <button class="btn btn-primary float-end mt-2" onclick="window.print()">
       <i class="fas fa-print"></i> Imprimir Resumen
     </button>
   </section>
 
   <section class="content" id="resumenDiario">
     <div class="row mb-4">
-      <div class="col-md-4" data-aos="fade-right">
+      <div class="col-md-3" data-aos="fade-right">
         <div class="card text-center shadow rounded">
           <div class="card-body">
             <h3 class="text-primary"><?= $totalServiciosHoy ?></h3>
@@ -62,7 +75,7 @@ $resultServiciosHoy = $stmtServiciosHoy->get_result();
         </div>
       </div>
 
-      <div class="col-md-4" data-aos="fade-up">
+      <div class="col-md-3" data-aos="fade-up">
         <div class="card text-center shadow rounded">
           <div class="card-body">
             <h3 class="text-success"><?= $lavadoresActivosHoy ?></h3>
@@ -71,19 +84,29 @@ $resultServiciosHoy = $stmtServiciosHoy->get_result();
         </div>
       </div>
 
-      <div class="col-md-4" data-aos="fade-left">
+      <div class="col-md-3" data-aos="fade-up">
+        <div class="card text-center shadow rounded">
+          <div class="card-body">
+            <h3 class="text-warning">$<?= number_format($totalIngresosHoy, 2) ?></h3>
+            <p class="text-muted">Ingresos del Día</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3" data-aos="fade-left">
         <div class="card shadow rounded">
           <div class="card-header">
             <h5>Servicios por Tipo de Carro</h5>
           </div>
           <ul class="list-group list-group-flush">
-            <?php while($tipo = $resultTipo->fetch_assoc()): ?>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <?= htmlspecialchars($tipo['tipo_carro']) ?>
-                <span class="badge badge-primary badge-pill"><?= $tipo['cantidad'] ?></span>
-              </li>
-            <?php endwhile; ?>
-            <?php if ($resultTipo->num_rows === 0): ?>
+            <?php if ($resultTipo->num_rows > 0): ?>
+              <?php while($tipo = $resultTipo->fetch_assoc()): ?>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <?= htmlspecialchars($tipo['tipo_carro']) ?>
+                  <span class="badge bg-primary rounded-pill"><?= $tipo['cantidad'] ?></span>
+                </li>
+              <?php endwhile; ?>
+            <?php else: ?>
               <li class="list-group-item text-muted">No hay servicios hoy</li>
             <?php endif; ?>
           </ul>

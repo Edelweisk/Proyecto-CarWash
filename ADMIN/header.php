@@ -1,6 +1,9 @@
 <?php
 require_once('../conexion.php');
 session_start();
+include '../control.php';
+
+
 
 // Validar sesión activa
 if (!isset($_SESSION['id_usuario'])) {
@@ -95,26 +98,7 @@ $activo_crearUsuarios = ($pagina === 'crearUsuarios.php') ? 'active' : '';
     </ul>
 
     <ul class="navbar-nav ml-auto">
-      <li class="nav-item">
-        <a class="nav-link" data-widget="navbar-search" href="#" role="button" title="Buscar">
-          <i class="fas fa-search"></i>
-        </a>
-        <div class="navbar-search-block">
-          <form class="form-inline" action="#" method="GET">
-            <div class="input-group input-group-sm">
-              <input class="form-control form-control-navbar" type="search" name="q" placeholder="Buscar" aria-label="Buscar" />
-              <div class="input-group-append">
-                <button class="btn btn-navbar" type="submit" title="Buscar">
-                  <i class="fas fa-search"></i>
-                </button>
-                <button class="btn btn-navbar" type="button" data-widget="navbar-search" aria-label="Cerrar búsqueda" title="Cerrar búsqueda">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </li>
+  
 
       <li class="nav-item">
         <a class="nav-link" data-widget="fullscreen" href="#" role="button" title="Pantalla completa">
@@ -166,7 +150,7 @@ $activo_crearUsuarios = ($pagina === 'crearUsuarios.php') ? 'active' : '';
               <p>Dashboard</p>
             </a>
           </li>
-
+<?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
           <li class="nav-item menu-open">
             <p class="nav-link <?php echo ($activo_usuarios || $activo_crearUsuarios) ? 'active' : ''; ?>">
               <i class="nav-icon fas fa-users-cog"></i>
@@ -187,14 +171,21 @@ $activo_crearUsuarios = ($pagina === 'crearUsuarios.php') ? 'active' : '';
               </li>
             </ul>
           </li>
-
+<?php endif; ?>
           <li class="nav-item">
             <a href="serviciosofrecidos.php" class="nav-link">
               <i class="nav-icon fas fa-circle"></i>
               <p>Servicios disponibles</p>
             </a>
           </li>
-
+<?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
+             <li class="nav-item">
+            <a href="asignarsueldo.php" class="nav-link">
+              <i class="nav-icon fas fa-circle"></i>
+              <p>Economico</p>
+            </a>
+          </li>
+<?php endif; ?>
           <li class="nav-item">
             <a href="salir.php" class="nav-link">
               <i class="nav-icon fas fa-sign-out-alt"></i>

@@ -50,7 +50,7 @@
           </li>
           <li class="nav-item">
             <a href="salir.php" class="nav-link">
-              <i class="fas fa-sign-out-alt"></i> Volver al Login
+              <i class="fas fa-sign-out-alt"></i> Volver
             </a>
           </li>
         </ul>

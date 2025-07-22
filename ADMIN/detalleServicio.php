@@ -12,7 +12,7 @@ if (!is_numeric($idServicio)) {
 
 $idServicio = (int) $idServicio;
 
-// Consulta mejorada con JOIN para obtener tipo_lavado con nombre y precio, además de empleado
+// Consulta con JOIN para obtener tipo de lavado actualizado (nombre + precio) y empleado
 $stmt = $con->prepare("
     SELECT 
         s.*, 
@@ -20,11 +20,11 @@ $stmt = $con->prepare("
         u.email AS empleado_email, 
         u.usuario AS empleado_usuario, 
         u.imagen AS empleado_imagen,
-        t.nombre AS tipo_lavado_nombre,
-        t.precio AS tipo_lavado_precio
+        tl.nombre AS tipo_lavado_nombre,
+        tl.precio AS tipo_lavado_precio
     FROM servicios s
     LEFT JOIN usuario u ON s.id_empleado = u.id
-    LEFT JOIN tipo_lavado t ON s.id_tipo_lavado = t.id
+    LEFT JOIN tipo_lavado tl ON s.id_tipo_lavado = tl.id
     WHERE s.id = ?
 ");
 $stmt->bind_param('i', $idServicio);
@@ -96,7 +96,7 @@ $servicio = $result->fetch_assoc();
                   </tr>
                   <tr>
                     <th>Precio</th>
-                    <td>$<?= number_format($servicio['tipo_lavado_precio'] ?? 0, 2); ?></td>
+                    <td>$<?= number_format((float)($servicio['tipo_lavado_precio'] ?? 0), 2); ?></td>
                   </tr>
                   <tr>
                     <th>Tipo de Vehículo</th>
