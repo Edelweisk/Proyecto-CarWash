@@ -63,7 +63,7 @@ if (!$resultado) {
 
 <div class="content-wrapper">
   <section class="content-header">
-    <h1>Tipos de Lavado <small>Servicios disponibles para tu vehículo</small></h1>
+    <h1>Servicios disponibles para tu vehículo</h1>
   </section>
 
   <section class="content">

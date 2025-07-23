@@ -31,7 +31,7 @@
 </style>
 
 <div id="preloader">
-  <img src="../CSS/CSSlogin/Imagenes/LogoCarWash.PNG" alt="Logo Cargando" class="animation__shake" width="100" height="100">
+  <img src="../CSS/CSSlogin/Imagenes/LogoCarWash2.PNG" alt="Logo Cargando" class="animation__shake" width="100" height="100">
 </div>
 
 <script>

@@ -69,7 +69,13 @@ for ($i = 6; $i >= 0; $i--) {
 
       <a href="reportes.php" class="btn btn-warning"><i class="fas fa-chart-line"></i> Reportes</a>
       <?php endif; ?>
+      <div class="col-sm-4 text-end">
+          <a href="crearServicio.php" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nuevo Servicio
+          </a>
+        </div>
     </div>
+  
   </section>
 
   <!-- Estadísticas rápidas -->
