@@ -1,8 +1,10 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once("../conexion.php");
 
-
-session_start();
 if (isset($_SESSION['id_usuario'])) {
     header("Location: index.php");
     exit();
@@ -15,7 +17,7 @@ if (isset($_POST['btn_ingresar'])) {
     if ($usuario === "" || $password === "") {
         echo "<script>alert('Por favor complete ambos campos.');</script>";
     } else {
-        $stmt = $con->prepare("SELECT id, nombre, imagen, password, estado FROM usuario WHERE usuario = ?");
+        $stmt = $con->prepare("SELECT id, nombre, imagen, password, estado, rol FROM usuario WHERE usuario = ?");
         $stmt->bind_param("s", $usuario);
         $stmt->execute();
         $resultado = $stmt->get_result();
@@ -26,8 +28,16 @@ if (isset($_POST['btn_ingresar'])) {
             if ($fila['estado'] !== 'activo') {
                 echo "<script>alert('Usuario inactivo, contacte con el administrador.');</script>";
             } else {
-                // Compara la contraseña en texto plano
+                // Compara contraseña (en texto plano aquí)
                 if ($fila['password'] === $password) {
+                    // Si el rol es tecnicolavado, se cancela todo
+                    if (strtolower($fila['rol']) === 'tecnicolavado') {
+                        session_destroy();
+                        echo "<script>alert('Acceso denegado para técnicos de lavado.'); window.location.href='login.php';</script>";
+                        exit();
+                    }
+
+                    // Si pasa todas las validaciones
                     $_SESSION['id_usuario'] = $fila['id'];
                     $_SESSION['nombre'] = $fila['nombre'];
                     $_SESSION['imagen'] = $fila['imagen'];
@@ -45,6 +55,7 @@ if (isset($_POST['btn_ingresar'])) {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="es">
