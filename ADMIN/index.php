@@ -285,7 +285,7 @@ for ($i = 6; $i >= 0; $i--) {
     }]
   };
   new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: data,
     options: {
       responsive: true,
