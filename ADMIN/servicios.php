@@ -59,9 +59,11 @@ $result = $con->query($sql);
                       <a href="detalleServicio.php?id=<?= $fila['id']; ?>" class="btn btn-info btn-sm" title="Ver detalles">
                         <i class="fas fa-eye"></i>
                       </a>
+                       <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
                       <a href="crearServicio.php?id=<?= $fila['id']; ?>" class="btn btn-warning btn-sm" title="Editar servicio">
                         <i class="fas fa-edit"></i>
                       </a>
+                         <?php endif; ?>
                       <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
                       <button class="btn btn-danger btn-sm" onclick="confirmarEliminacion(<?= $fila['id']; ?>)" title="Eliminar servicio">
                         <i class="fas fa-trash-alt"></i>

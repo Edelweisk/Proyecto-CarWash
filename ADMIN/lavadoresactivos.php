@@ -2,12 +2,21 @@
 require_once '../conexion.php';
 include 'header.php';
 
-// Obtener día actual en español (Lunes, Martes, etc.)
-$diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-$indiceDiaHoy = date('N') - 1; // 0 para lunes ... 6 para domingo
-$diaHoy = $diasSemana[$indiceDiaHoy];
+// Obtener día actual en español (compatible con Windows)
+$diaHoy = [
+    'Monday'    => 'Lunes',
+    'Tuesday'   => 'Martes',
+    'Wednesday' => 'Miércoles',
+    'Thursday'  => 'Jueves',
+    'Friday'    => 'Viernes',
+    'Saturday'  => 'Sábado',
+    'Sunday'    => 'Domingo',
+][date('l')];
 
-// Obtener todos los lavadores activos con sus datos y servicios
+// Lista ordenada de días en español
+$diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+// Obtener lavadores activos y sus datos
 $query = "
     SELECT u.id, u.nombre, u.imagen,
            COUNT(s.id) AS total_servicios,
@@ -22,13 +31,12 @@ $query = "
 
 $resultado = $con->query($query);
 
-// Armar lista de IDs para obtener disponibilidad
+// Obtener disponibilidad
 $idsLavadores = [];
 if ($resultado && $resultado->num_rows > 0) {
     while ($row = $resultado->fetch_assoc()) {
         $idsLavadores[] = $row['id'];
     }
-    // Reiniciar puntero para reutilizar resultado
     $resultado->data_seek(0);
 }
 
@@ -46,7 +54,7 @@ if (count($idsLavadores) > 0) {
     }
 }
 
-// Calcular lavadores disponibles por día para gráfica
+// Calcular lavadores disponibles por día (para gráfico)
 $lavadoresPorDia = array_fill_keys($diasSemana, 0);
 foreach ($disponibilidadLavadores as $dias) {
     foreach ($dias as $dia) {
@@ -78,8 +86,7 @@ foreach ($disponibilidadLavadores as $dias) {
             <div class="card tarjeta-lavador shadow-sm">
               <div class="card-body text-center">
 
-            
-                <a <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?> href="editarDisponibilidad.php?id=<?php endif; ?><?= $lavador['id'] ?>" style="text-decoration:none; color:inherit;">
+                <a <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?> href="editarDisponibilidad.php?id=<?= $lavador['id'] ?>" <?php endif; ?> style="text-decoration:none; color:inherit;">
                   <img 
                     src="../IMG/usuarios/<?= htmlspecialchars($lavador['imagen']) ?>" 
                     alt="Foto de <?= htmlspecialchars($lavador['nombre']) ?>"
