@@ -95,7 +95,7 @@ if (isset($_POST['btn_ingresar'])) {
       </div>
 
       <div class="text-center mb-4">
-        <h1 class="logo-text">Debug <span>Car Wash</span></h1>
+       <img src="../IMG/debuglogo2.png" alt="Logo" style="max-width: 300px; max-height: 300px;"> 
         <p class="subtitle">Iniciar sesión</p>
       </div>
 
@@ -131,7 +131,7 @@ if (isset($_POST['btn_ingresar'])) {
       </form>
 
       <div class="text-center mt-3">
-        <a href="register.php" class="register-link">Registrar nuevos miembros</a>
+        <p> ¿Nuevo miembro? <a href="register.php" class="register-link"> ¡Regístrate aquí!</a> </p>
       </div>
     </div>
   </div>
