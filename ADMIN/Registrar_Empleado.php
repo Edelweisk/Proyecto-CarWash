@@ -3,39 +3,61 @@ include_once "../conexion.php";
 include 'header.php'; 
 include '../control.php';
 
-if (isset($_POST['btn_registrar'])) {
-    $nombre   = $_POST['nombre'];
-    $email    = $_POST['email'];
-    $usuario  = $_POST['usuario']; 
-    $password = $_POST['password'];
-    $rol      = $_POST['rol'];
 
-    $sql = "SELECT id FROM usuario WHERE usuario = '$usuario'";
-    $ejecutar = $con->query($sql);
-    
-    if ($ejecutar->num_rows > 0) { 
+if (isset($_REQUEST['btn_registrar'])) {
+    // Recoger y sanitizar datos del formulario
+    $nombre            = trim($_POST['nombre']);
+    $fecha_nacimiento  = $_POST['fecha_nacimiento'];
+    $lugar_nacimiento  = trim($_POST['lugar_nacimiento']);
+    $numero_identificacion = trim($_POST['numero_identificacion']);
+    $nacionalidad      = trim($_POST['nacionalidad']);
+    $estado_civil      = $_POST['estado_civil'];
+    $direccion         = trim($_POST['direccion']);
+    $telefono          = trim($_POST['telefono']);
+    $numero_emergencia = trim($_POST['numero_emergencia']);
+    $email             = trim($_POST['email']);
+    $usuario           = trim($_POST['usuario']);
+    $password          = $_POST['password'];
+    $rol               = $_POST['rol'];
+
+    // Validar que el usuario no exista (usar prepared statement)
+    $stmt = $con->prepare("SELECT id FROM usuario WHERE usuario = ?");
+    $stmt->bind_param("s", $usuario);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) { 
         echo "<script>alert('El usuario ya existe, por favor ingrese otro');</script>"; 
     } else {
-        $imgFinal = null;
-
-        if (!empty($_FILES['imagen']['name'])) {
+        // Procesar imagen
+        $imgFinal = 'default.png'; // valor por defecto
+        if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
             $imgNombre = $_FILES['imagen']['name'];
             $imgTmp    = $_FILES['imagen']['tmp_name'];
             $ext       = pathinfo($imgNombre, PATHINFO_EXTENSION);
             $imgFinal  = strtolower($usuario . "_" . time() . "." . $ext);
             $imgDestino = "../IMG/usuarios/" . $imgFinal;
-            move_uploaded_file($imgTmp, $imgDestino);
+
+            // Mover archivo
+            if (!move_uploaded_file($imgTmp, $imgDestino)) {
+                // Si falla mover, se queda en default.png
+                $imgFinal = 'default.png';
+            }
         }
 
-        $sql = "INSERT INTO usuario(nombre, email, usuario, password, imagen, rol)
-                VALUES('$nombre', '$email', '$usuario', '$password', '$imgFinal', '$rol')";
+        // Insertar datos en la BD con prepared statement
+        $insert = $con->prepare("INSERT INTO usuario (nombre, fecha_nacimiento, lugar_nacimiento, numero_identificacion, nacionalidad, estado_civil, direccion, telefono, numero_emergencia, email, usuario, password, rol, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-        if ($con->query($sql)) {
+        $insert->bind_param("ssssssssssssss", $nombre, $fecha_nacimiento, $lugar_nacimiento, $numero_identificacion, $nacionalidad, $estado_civil, $direccion, $telefono, $numero_emergencia, $email, $usuario, $password, $rol, $imgFinal);
+
+        if ($insert->execute()) {
             echo "<script>alert('Empleado registrado correctamente');</script>";
         } else {
-            echo "<script>alert('Error al registrar el empleado');</script>";
+            echo "<script>alert('Error al registrar el empleado: " . $con->error . "');</script>";
         }
     }
+    $stmt->close();
+    $con->close();
 }
 ?>
 <!DOCTYPE html>

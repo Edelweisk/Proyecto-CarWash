@@ -1,7 +1,7 @@
 <?php
 require_once('../conexion.php');
-session_start();
 include '../control.php';
+date_default_timezone_set('America/Panama');
 
 
 
