@@ -106,8 +106,7 @@ if (isset($_POST['btn_ingresar'])) {
       </div>
 
       <div class="text-center mb-4">
-         <img src="../CSS/CSSlogin/Imagenes/LogoCarWash.PNG" class="logo" alt="Logo Car Wash" style="max-width: 120px; height: auto;" />
-        <h1 class="logo-text">Debug <span>Car Wash</span></h1>
+         <img src="../CSS/CSSlogin/Imagenes/LogoCar.PNG" class="logo" alt="Logo Car Wash" style="max-width: 300px; height: 200px;" />
         <p class="subtitle">Iniciar sesión</p>
       </div>
 
