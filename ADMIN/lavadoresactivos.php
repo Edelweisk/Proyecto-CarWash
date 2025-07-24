@@ -71,7 +71,7 @@ foreach ($disponibilidadLavadores as $dias) {
 
 <div class="content-wrapper">
   <section class="content-header">
-    <h1>Lavadores Disponibles <small>Estado actual y programación semanal</small></h1>
+    <h1>Lavadores Disponibles | <small>Estado actual y programación semanal</small></h1>
   </section>
 
   <section class="content">

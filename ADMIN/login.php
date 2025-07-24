@@ -105,10 +105,7 @@ if (isset($_POST['btn_ingresar'])) {
         <span style="--size:18px; --left:82%; --duration:10s; --delay:1.1s;"></span>
       </div>
 
-      <div class="text-center mb-4">
-         <img src="../CSS/CSSlogin/Imagenes/LogoCar.PNG" class="logo" alt="Logo Car Wash" style="max-width: 300px; height: 200px;" />
-        <p class="subtitle">Iniciar sesión</p>
-      </div>
+     
 
       <form action="login.php" method="post" autocomplete="off" novalidate>
         <div class="form-group position-relative">

@@ -84,7 +84,7 @@ $activo_crearUsuarios = ($pagina === 'crearUsuarios.php') ? 'active' : '';
 <div class="wrapper">
 
   <div class="preloader flex-column justify-content-center align-items-center">
-    <img class="animation__shake" src="../CSS/CSSlogin/Imagenes/LogoCarWash.PNG" alt="Debug Car Wash Logo" height="60" width="60" />
+    <img class="animation__shake" src="../CSS/CSSlogin/Imagenes/LogoCarWash2.PNG" alt="Debug Car Wash Logo" height="60" width="60" />
   </div>
 
   <!-- Navbar principal -->
