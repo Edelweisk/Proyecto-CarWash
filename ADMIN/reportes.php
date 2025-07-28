@@ -1,15 +1,20 @@
 <?php
+// Incluir conexión a base de datos
 require_once('../conexion.php');
+// Incluir plantilla header
 include 'header.php';
+// Incluir control de acceso / sesión
 include '../control.php';
 
-// Exportar a Excel
+// Bloque para exportar el reporte en formato Excel si se recibe la petición ?export=excel
 if (isset($_GET['export']) && $_GET['export'] === 'excel') {
+    // Establecer cabeceras HTTP para descarga de archivo Excel
     header("Content-Type: application/vnd.ms-excel; charset=utf-8");
     header("Content-Disposition: attachment; filename=reporte_economico_debugcarwash.xls");
     header("Pragma: no-cache");
     header("Expires: 0");
 
+    // Consulta: obtener sueldos mensuales actuales de técnicos de lavado
     $sueldosMensuales = $con->query("
         SELECT u.nombre, SUM(se.monto) AS total_sueldo
         FROM usuario u
@@ -20,6 +25,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
         GROUP BY u.id
     ");
 
+    // Consulta: obtener ganancias semanales actuales (semana actual) 
     $gananciasSemanales = $con->query("
         SELECT YEARWEEK(fecha, 1) as semana, SUM(tl.precio) AS total_ganancias
         FROM servicios s
@@ -29,37 +35,46 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
         GROUP BY semana
     ");
 
+    // Mostrar título del reporte
     echo "<h2>Reporte Económico - Debug Car Wash</h2>";
 
+    // Mostrar tabla con sueldos mensuales
     echo "<h3>Sueldos Mensuales (Mes Actual)</h3>";
     echo "<table border='1'>";
     echo "<tr><th>Empleado</th><th>Total Sueldo ($)</th></tr>";
 
+    // Variable para acumulado total sueldos
     $totalSueldos = 0;
     while ($row = $sueldosMensuales->fetch_assoc()) {
         $total = $row['total_sueldo'] ?? 0;
         echo "<tr><td>{$row['nombre']}</td><td align='right'>" . number_format($total, 2) . "</td></tr>";
         $totalSueldos += $total;
     }
+    // Mostrar total general de sueldos
     echo "<tr><th>Total General</th><th align='right'>" . number_format($totalSueldos, 2) . "</th></tr>";
     echo "</table><br>";
 
+    // Mostrar tabla con ganancias semanales
     echo "<h3>Ganancias Semanales (Semana Actual)</h3>";
     echo "<table border='1'>";
     echo "<tr><th>Semana</th><th>Total Ganancias ($)</th></tr>";
 
+    // Variable para acumulado total ganancias
     $totalGanancias = 0;
     while ($row = $gananciasSemanales->fetch_assoc()) {
         $total = $row['total_ganancias'] ?? 0;
         echo "<tr><td>{$row['semana']}</td><td align='right'>" . number_format($total, 2) . "</td></tr>";
         $totalGanancias += $total;
     }
+    // Mostrar total general de ganancias
     echo "<tr><th>Total General</th><th align='right'>" . number_format($totalGanancias, 2) . "</th></tr>";
     echo "</table>";
-    exit();
+    exit(); // Terminar script tras exportar para no mostrar HTML
 }
 
-// Mostrar reporte en pantalla (HTML)
+// Si no es exportación, cargar datos para mostrar en pantalla (HTML)
+
+// Consulta sueldos mensuales actuales para mostrar tabla
 $sueldosMensuales = $con->query("
     SELECT u.nombre, SUM(se.monto) AS total_sueldo
     FROM usuario u
@@ -70,6 +85,7 @@ $sueldosMensuales = $con->query("
     GROUP BY u.id
 ");
 
+// Consulta ganancias semanales actuales para mostrar tabla
 $gananciasSemanales = $con->query("
     SELECT YEARWEEK(fecha, 1) as semana, SUM(tl.precio) AS total_ganancias
     FROM servicios s
@@ -80,9 +96,11 @@ $gananciasSemanales = $con->query("
 ");
 ?>
 
+<!-- Contenido HTML del reporte -->
 <div class="content-wrapper">
     <section class="content-header">
         <h1>📊 Reporte Económico - Debug Car Wash</h1>
+        <!-- Botones para imprimir y exportar -->
         <div class="mb-3">
             <button onclick="window.print()" class="btn btn-info">🖨️ Imprimir Reporte</button>
             <a href="?export=excel" class="btn btn-success">📊 Exportar a Excel</a>
@@ -90,6 +108,7 @@ $gananciasSemanales = $con->query("
     </section>
 
     <section class="content">
+        <!-- Tabla sueldos mensuales -->
         <div class="card p-4 shadow mb-4">
             <h3>Sueldos Mensuales (Mes Actual)</h3>
             <table class="table table-bordered table-striped">
@@ -119,6 +138,7 @@ $gananciasSemanales = $con->query("
             </table>
         </div>
 
+        <!-- Tabla ganancias semanales -->
         <div class="card p-4 shadow">
             <h3>Ganancias Semanales (Semana Actual)</h3>
             <table class="table table-bordered table-striped">
@@ -150,6 +170,7 @@ $gananciasSemanales = $con->query("
     </section>
 </div>
 
+<!-- Estilos específicos para impresión -->
 <style>
 @media print {
     body {
@@ -158,9 +179,11 @@ $gananciasSemanales = $con->query("
         background: white !important;
         color: black !important;
     }
+    /* Ocultar botones y cabeceras en impresión */
     .btn, .content-header > div {
         display: none !important;
     }
+    /* Mejorar estilo de tablas en impresión */
     table {
         width: 100% !important;
         border-collapse: collapse !important;
@@ -175,4 +198,5 @@ $gananciasSemanales = $con->query("
 }
 </style>
 
+<!-- Incluir footer de plantilla -->
 <?php include 'footer.php'; ?>

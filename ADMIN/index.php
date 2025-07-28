@@ -1,12 +1,17 @@
 <?php
+// Incluye el encabezado común (menú, barra superior, etc.)
 include 'header.php';
+
+// Configura la zona horaria local
 date_default_timezone_set('America/Panama');
 
-// --- Variables de fecha y tiempo ---
-$hoy = date('Y-m-d');
-$fechaActual = date('d/m/Y');
+// ========================
+// Sección: Fechas y días
+// ========================
+$hoy = date('Y-m-d'); // Fecha actual en formato SQL
+$fechaActual = date('d/m/Y'); // Fecha para mostrar al usuario
 
-// --- Día de la semana en español ---
+// Traducción del nombre del día en inglés a español
 $diaSemanaActual = [
   'Monday' => 'Lunes',
   'Tuesday' => 'Martes',
@@ -17,11 +22,15 @@ $diaSemanaActual = [
   'Sunday' => 'Domingo',
 ][date('l')];
 
-// --- Consultas principales ---
+// ========================
+// Sección: Estadísticas generales
+// ========================
 $totalUsuarios = $con->query("SELECT COUNT(*) AS total FROM usuario")->fetch_assoc()['total'] ?? 0;
 $totalServicios = $con->query("SELECT COUNT(*) AS total FROM servicios")->fetch_assoc()['total'] ?? 0;
 
-// --- Lavadores activos HOY ---
+// ========================
+// Sección: Lavadores disponibles HOY
+// ========================
 $lavadoresHoyQuery = "
   SELECT u.id, u.nombre
   FROM usuario u
@@ -34,15 +43,20 @@ $lavadoresHoyQuery = "
 $lavadoresHoy = $con->query($lavadoresHoyQuery);
 $totalLavadoresHoy = $lavadoresHoy->num_rows ?? 0;
 
-// --- Servicios hoy ---
+// ========================
+// Sección: Servicios de hoy y ayer
+// ========================
 $serviciosHoy = $con->query("SELECT COUNT(*) AS total FROM servicios WHERE DATE(fecha) = '$hoy'")->fetch_assoc()['total'] ?? 0;
 
-// --- Servicios ayer ---
-$ayer = date('Y-m-d', strtotime('-1 day'));
+$ayer = date('Y-m-d', strtotime('-1 day')); // Fecha de ayer
 $serviciosAyer = $con->query("SELECT COUNT(*) AS total FROM servicios WHERE DATE(fecha) = '$ayer'")->fetch_assoc()['total'] ?? 0;
-$diferenciaServicios = $serviciosHoy - $serviciosAyer;
 
-// --- Últimos servicios ---
+$diferenciaServicios = $serviciosHoy - $serviciosAyer; // Comparación para mostrar flecha ↑ ↓
+
+// ========================
+// Sección: Últimos registros
+// ========================
+// Últimos 5 servicios realizados
 $ultimos_servicios_sql = "
   SELECT s.*, u.nombre 
   FROM servicios s 
@@ -52,11 +66,13 @@ $ultimos_servicios_sql = "
 ";
 $ultimos_servicios = $con->query($ultimos_servicios_sql);
 
-// --- Últimos usuarios registrados ---
+// Últimos 5 usuarios registrados
 $ultimos_usuarios_sql = "SELECT nombre, usuario, fechaRegistro FROM usuario ORDER BY fechaRegistro DESC LIMIT 5";
 $ultimos_usuarios = $con->query($ultimos_usuarios_sql);
 
-// --- Servicios últimos 7 días ---
+// ========================
+// Sección: Servicios últimos 7 días
+// ========================
 $servicios_7dias = [];
 for ($i = 6; $i >= 0; $i--) {
   $fecha = date('Y-m-d', strtotime("-$i days"));
@@ -64,6 +80,7 @@ for ($i = 6; $i >= 0; $i--) {
   $servicios_7dias[] = ['fecha' => date('d/m', strtotime($fecha)), 'total' => (int)$count];
 }
 ?>
+
 
 <!-- AOS y Chart.js -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet" />
@@ -97,9 +114,6 @@ for ($i = 6; $i >= 0; $i--) {
         <a href="reportes.php" class="btn btn-warning"><i class="fas fa-chart-line"></i> Reportes</a>
       <?php endif; ?>
       <div class="col-sm-4 text-end">
-          <a href="crearServicio.php" class="btn btn-success">
-            <i class="fas fa-plus"></i> Nuevo Servicio
-          </a>
         </div>
     </div>
   
@@ -273,9 +287,10 @@ for ($i = 6; $i >= 0; $i--) {
   </section>
 </div>
 
-<!-- Gráfica Chart.js -->
 <script>
   const ctx = document.getElementById('chartServicios').getContext('2d');
+
+  // Datos enviados desde PHP al gráfico
   const data = {
     labels: <?php echo json_encode(array_column($servicios_7dias, 'fecha')); ?>,
     datasets: [{
@@ -290,6 +305,8 @@ for ($i = 6; $i >= 0; $i--) {
       borderWidth: 3,
     }]
   };
+
+  // Configuración del gráfico de barras
   new Chart(ctx, {
     type: 'bar',
     data: data,
@@ -301,5 +318,6 @@ for ($i = 6; $i >= 0; $i--) {
     }
   });
 </script>
+
 
 <?php include 'footer.php'; ?>

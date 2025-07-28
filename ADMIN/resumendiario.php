@@ -1,33 +1,36 @@
 <?php
+// Incluir conexión a la base de datos
 require_once '../conexion.php';
+// Incluir plantilla de encabezado HTML
 include 'header.php';
 
+// Obtener la fecha actual en formato YYYY-MM-DD para filtrar consultas del día
 $hoy = date('Y-m-d');
 
-// Total de servicios hoy
+// Consulta preparada para contar el total de servicios realizados hoy
 $sqlTotalServicios = "SELECT COUNT(*) as total FROM servicios WHERE DATE(fecha) = ?";
 $stmtTotal = $con->prepare($sqlTotalServicios);
 $stmtTotal->bind_param("s", $hoy);
 $stmtTotal->execute();
 $resTotal = $stmtTotal->get_result()->fetch_assoc();
-$totalServiciosHoy = $resTotal['total'] ?? 0;
+$totalServiciosHoy = $resTotal['total'] ?? 0;  // Número total de servicios hoy
 
-// Servicios por tipo de carro
+// Consulta preparada para obtener la cantidad de servicios realizados hoy agrupados por tipo de carro
 $sqlServiciosTipo = "SELECT tipo_carro, COUNT(*) as cantidad FROM servicios WHERE DATE(fecha) = ? GROUP BY tipo_carro";
 $stmtTipo = $con->prepare($sqlServiciosTipo);
 $stmtTipo->bind_param("s", $hoy);
 $stmtTipo->execute();
 $resultTipo = $stmtTipo->get_result();
 
-// Lavadores activos (distintos empleados que realizaron servicios hoy)
+// Consulta preparada para contar la cantidad de lavadores (empleados) distintos que realizaron servicios hoy
 $sqlLavadoresActivos = "SELECT COUNT(DISTINCT id_empleado) AS activos FROM servicios WHERE DATE(fecha) = ?";
 $stmtLavadores = $con->prepare($sqlLavadoresActivos);
 $stmtLavadores->bind_param("s", $hoy);
 $stmtLavadores->execute();
 $resLavadores = $stmtLavadores->get_result()->fetch_assoc();
-$lavadoresActivosHoy = $resLavadores['activos'] ?? 0;
+$lavadoresActivosHoy = $resLavadores['activos'] ?? 0;  // Número de lavadores activos hoy
 
-// Total ingresos del día (sumando el precio del tipo de lavado)
+// Consulta preparada para calcular el total de ingresos del día sumando el precio del tipo de lavado
 $sqlIngresos = "
   SELECT SUM(tl.precio) AS total_ingresos
   FROM servicios s
@@ -38,9 +41,9 @@ $stmtIngresos = $con->prepare($sqlIngresos);
 $stmtIngresos->bind_param("s", $hoy);
 $stmtIngresos->execute();
 $resIngresos = $stmtIngresos->get_result()->fetch_assoc();
-$totalIngresosHoy = $resIngresos['total_ingresos'] ?? 0.00;
+$totalIngresosHoy = $resIngresos['total_ingresos'] ?? 0.00;  // Total ingresos hoy
 
-// Detalle de servicios realizados hoy
+// Consulta preparada para obtener detalle de servicios realizados hoy con información del lavador
 $sqlServiciosHoy = "
   SELECT s.id, s.tipo_carro, s.placa, s.fecha, s.observaciones, u.nombre as lavador
   FROM servicios s
@@ -54,9 +57,11 @@ $stmtServiciosHoy->execute();
 $resultServiciosHoy = $stmtServiciosHoy->get_result();
 ?>
 
+<!-- Enlace al CSS específico para el resumen -->
 <link rel="stylesheet" href="../CSS/serviciosCSS/resumen.css">
 
 <div class="content-wrapper">
+  <!-- Cabecera del contenido con título y botón para imprimir -->
   <section class="content-header">
     <h1>Resumen Diario <small><?= date('d/m/Y') ?></small></h1>
     <button class="btn btn-primary float-end mt-2" onclick="window.print()">
@@ -64,8 +69,10 @@ $resultServiciosHoy = $stmtServiciosHoy->get_result();
     </button>
   </section>
 
+  <!-- Sección principal del resumen diario -->
   <section class="content" id="resumenDiario">
     <div class="row mb-4">
+      <!-- Tarjeta con total de servicios realizados hoy -->
       <div class="col-md-3" data-aos="fade-right">
         <div class="card text-center shadow rounded">
           <div class="card-body">
@@ -75,6 +82,7 @@ $resultServiciosHoy = $stmtServiciosHoy->get_result();
         </div>
       </div>
 
+      <!-- Tarjeta con cantidad de lavadores activos hoy -->
       <div class="col-md-3" data-aos="fade-up">
         <div class="card text-center shadow rounded">
           <div class="card-body">
@@ -84,6 +92,7 @@ $resultServiciosHoy = $stmtServiciosHoy->get_result();
         </div>
       </div>
 
+      <!-- Tarjeta con total de ingresos del día -->
       <div class="col-md-3" data-aos="fade-up">
         <div class="card text-center shadow rounded">
           <div class="card-body">
@@ -93,6 +102,7 @@ $resultServiciosHoy = $stmtServiciosHoy->get_result();
         </div>
       </div>
 
+      <!-- Tarjeta con lista de servicios por tipo de carro -->
       <div class="col-md-3" data-aos="fade-left">
         <div class="card shadow rounded">
           <div class="card-header">
@@ -114,6 +124,7 @@ $resultServiciosHoy = $stmtServiciosHoy->get_result();
       </div>
     </div>
 
+    <!-- Tabla con detalle completo de los servicios realizados hoy -->
     <div class="card shadow" data-aos="fade-up">
       <div class="card-header bg-info text-white">
         <h4 class="mb-0">Detalle de Servicios Realizados</h4>
@@ -152,24 +163,32 @@ $resultServiciosHoy = $stmtServiciosHoy->get_result();
   </section>
 </div>
 
+<!-- Estilos CSS específicos para impresión -->
 <style>
 @media print {
+  /* Ocultar todos los elementos */
   body * {
     visibility: hidden;
   }
+  /* Mostrar solo el resumen diario y sus hijos */
   #resumenDiario, #resumenDiario * {
     visibility: visible;
   }
+  /* Ajustar posición para impresión */
   #resumenDiario {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
   }
+  /* Ocultar botones, barra de navegación y pie de página al imprimir */
   button, .btn, .navbar, .main-footer, .sidebar {
     display: none !important;
   }
 }
 </style>
 
-<?php include 'footer.php'; ?>
+<?php 
+// Incluir plantilla footer HTML
+include 'footer.php'; 
+?>
