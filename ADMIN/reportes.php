@@ -15,25 +15,12 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     header("Expires: 0");
 
     // Consulta: obtener sueldos mensuales actuales de técnicos de lavado
-    $sueldosMensuales = $con->query("
-        SELECT u.nombre, SUM(se.monto) AS total_sueldo
-        FROM usuario u
-        LEFT JOIN salario_empleado se ON u.id = se.id_usuario
-        WHERE u.rol = 'TecnicoLavado'
-        AND MONTH(se.fechaRegistro) = MONTH(CURRENT_DATE())
-        AND YEAR(se.fechaRegistro) = YEAR(CURRENT_DATE())
-        GROUP BY u.id
-    ");
+    $sueldosMensuales = $con->query("CALL reporte_sueldos_mensuales()");
+    $con->next_result(); // Para evitar conflictos si se ejecutan más consultas
 
     // Consulta: obtener ganancias semanales actuales (semana actual) 
-    $gananciasSemanales = $con->query("
-        SELECT YEARWEEK(fecha, 1) as semana, SUM(tl.precio) AS total_ganancias
-        FROM servicios s
-        INNER JOIN tipo_lavado tl ON s.id_tipo_lavado = tl.id
-        WHERE YEAR(fecha) = YEAR(CURRENT_DATE())
-        AND WEEK(fecha, 1) = WEEK(CURRENT_DATE(), 1)
-        GROUP BY semana
-    ");
+    $gananciasSemanales = $con->query("CALL reporte_ganancias_semanales()");
+    $con->next_result();
 
     // Mostrar título del reporte
     echo "<h2>Reporte Económico - Debug Car Wash</h2>";
@@ -75,25 +62,11 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
 // Si no es exportación, cargar datos para mostrar en pantalla (HTML)
 
 // Consulta sueldos mensuales actuales para mostrar tabla
-$sueldosMensuales = $con->query("
-    SELECT u.nombre, SUM(se.monto) AS total_sueldo
-    FROM usuario u
-    LEFT JOIN salario_empleado se ON u.id = se.id_usuario
-    WHERE u.rol = 'TecnicoLavado'
-    AND MONTH(se.fechaRegistro) = MONTH(CURRENT_DATE())
-    AND YEAR(se.fechaRegistro) = YEAR(CURRENT_DATE())
-    GROUP BY u.id
-");
+$sueldosMensuales = $con->query("CALL reporte_sueldos_mensuales()");
+    $con->next_result();
 
-// Consulta ganancias semanales actuales para mostrar tabla
-$gananciasSemanales = $con->query("
-    SELECT YEARWEEK(fecha, 1) as semana, SUM(tl.precio) AS total_ganancias
-    FROM servicios s
-    INNER JOIN tipo_lavado tl ON s.id_tipo_lavado = tl.id
-    WHERE YEAR(fecha) = YEAR(CURRENT_DATE())
-    AND WEEK(fecha, 1) = WEEK(CURRENT_DATE(), 1)
-    GROUP BY semana
-");
+    $gananciasSemanales = $con->query("CALL reporte_ganancias_semanales()");
+    $con->next_result();
 ?>
 
 <!-- Contenido HTML del reporte -->

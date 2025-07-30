@@ -162,24 +162,54 @@ include 'header.php';
     });
 
     // Delegación de evento para botón eliminar usuario con confirmación SweetAlert2
-    $('#usuariosTable').on('click', '.btn-eliminar', function() {
-      const userId = $(this).data('id'); // Obtener el ID del usuario a eliminar
-      Swal.fire({
-        title: '¿Estás seguro?',
-        text: "¡Esta acción eliminará el usuario permanentemente!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Redirigir a script PHP que elimina el usuario pasando el ID
-          window.location.href = `eliminarUsuario.php?id=${userId}`;
+   $('#usuariosTable').on('click', '.btn-eliminar', function () {
+  const userId = $(this).data('id');
+
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: "¡Esta acción eliminará el usuario permanentemente!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Aquí usamos AJAX para enviar el ID por POST
+      $.ajax({
+        url: 'eliminarUsuario.php',
+        type: 'POST',
+        data: { id: userId },
+        success: function (response) {
+          if (response.trim() === 'ok') {
+            Swal.fire(
+              '¡Eliminado!',
+              'El usuario ha sido eliminado correctamente.',
+              'success'
+            ).then(() => {
+              location.reload(); // Recargar la tabla para reflejar los cambios
+            });
+          } else {
+            Swal.fire(
+              'Error',
+              'No se pudo eliminar el usuario. Intenta nuevamente.',
+              'error'
+            );
+          }
+        },
+        error: function () {
+          Swal.fire(
+            'Error',
+            'Ocurrió un problema con la solicitud.',
+            'error'
+          );
         }
       });
-    });
+    }
+  });
+});
+
   });
 </script>
 

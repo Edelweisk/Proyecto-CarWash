@@ -26,7 +26,7 @@ if (!isset($_SESSION['id_usuario'])) {
 $id = $_SESSION['id_usuario']; // ID del usuario logueado
 
 // Consulta segura usando prepared statement
-$stmt = $con->prepare("SELECT nombre, email, usuario, imagen FROM usuario WHERE id = ?");
+$stmt = $con->prepare("CALL header(?)");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $resultado = $stmt->get_result();

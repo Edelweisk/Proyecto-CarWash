@@ -37,12 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // --- Actualizar servicio existente ---
         if ($idServicio && is_numeric($idServicio)) {
-            $stmt = $con->prepare("UPDATE servicios SET id_empleado=?, id_tipo_lavado=?, tipo_carro=?, placa=?, fecha=?, observaciones=?, estado=?, metodo_pago=? WHERE id=?");
+            $stmt = $con->prepare("CALL editar_servicio(?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('iissssssi', $id_empleado, $id_tipo_lavado, $tipo_carro, $placa, $fecha, $observaciones, $estado, $metodo_pago, $idServicio);
             $exito = $stmt->execute();
         } else {
             // --- Crear nuevo servicio ---
-            $stmt = $con->prepare("INSERT INTO servicios (id_empleado, id_tipo_lavado, tipo_carro, placa, fecha, observaciones, estado, metodo_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $con->prepare("CALL crear_servicio(?, ?, ?, ?, ?, ?, ?, ?)");            
             $stmt->bind_param('iissssss', $id_empleado, $id_tipo_lavado, $tipo_carro, $placa, $fecha, $observaciones, $estado, $metodo_pago);
             $exito = $stmt->execute();
         }
@@ -76,7 +76,7 @@ if ($idServicio && is_numeric($idServicio)) {
 }
 
 // --- Cargar listas desplegables: empleados y tipos de lavado ---
-$empleados = $con->query("SELECT id, nombre FROM usuario WHERE rol IN ('TecnicoLavado', 'administrador') ORDER BY nombre");
+$empleados = $con->query("SELECT id, nombre FROM usuario WHERE rol IN ('TecnicoLavado') ORDER BY nombre");
 $tiposLavado = $con->query("SELECT id, nombre, precio FROM tipo_lavado WHERE estado = 'activo' ORDER BY nombre");
 
 include 'header.php';
@@ -183,7 +183,7 @@ include 'header.php';
               <label for="estado" class="form-label">Estado del Servicio</label>
               <select name="estado" id="estado" class="form-select" required>
                 <?php
-                $estados = ['pendiente' => 'Pendiente', 'en_proceso' => 'En proceso', 'finalizado' => 'Finalizado'];
+                $estados = ['pendiente' => 'Pendiente', 'finalizado' => 'Finalizado'];
                 foreach ($estados as $key => $val) {
                   $sel = ($servicio['estado'] ?? '') === $key ? 'selected' : '';
                   echo "<option value=\"$key\" $sel>$val</option>";

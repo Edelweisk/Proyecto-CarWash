@@ -26,7 +26,7 @@ if (isset($_REQUEST['btn_registrar'])) {
     $rol               = $_POST['rol'];
 
     // Validar que no exista ya un usuario con ese nombre (consulta segura con prepared statement)
-    $stmt = $con->prepare("SELECT id FROM usuario WHERE usuario = ?");
+    $stmt = $con->prepare("CALL validar(?)");
     $stmt->bind_param("s", $usuario);
     $stmt->execute();
     $stmt->store_result();
