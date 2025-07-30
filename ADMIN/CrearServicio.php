@@ -75,6 +75,12 @@ if ($idServicio && is_numeric($idServicio)) {
     }
 }
 
+// Si no es modo edición, precargar tipo de lavado si viene por GET
+if (!$editar && isset($_GET['id_tipo_lavado']) && is_numeric($_GET['id_tipo_lavado'])) {
+    $servicio['id_tipo_lavado'] = $_GET['id_tipo_lavado'];
+}
+
+
 // --- Cargar listas desplegables: empleados y tipos de lavado ---
 $empleados = $con->query("SELECT id, nombre FROM usuario WHERE rol IN ('TecnicoLavado') ORDER BY nombre");
 $tiposLavado = $con->query("SELECT id, nombre, precio FROM tipo_lavado WHERE estado = 'activo' ORDER BY nombre");
