@@ -1,24 +1,26 @@
 <?php
-// CrearServicio.php
-
+// --- Conexión a la base de datos ---
 require_once('../conexion.php');
 
-// Inicializar variables
-$editar = false;
-$error = null;
+// --- Inicializar variables y estructura base del servicio ---
+$editar = false; // Bandera para saber si es edición o creación
+$error = null;   // Para mostrar mensajes de error
+
+// Valores por defecto para el formulario (modo creación)
 $servicio = [
     'id_empleado' => '',
     'id_tipo_lavado' => '',
     'tipo_carro' => '',
     'placa' => '',
-    'fecha' => date('Y-m-d\TH:i'),
+    'fecha' => date('Y-m-d\TH:i'), // formato para input datetime-local
     'observaciones' => '',
     'estado' => 'pendiente',
     'metodo_pago' => 'efectivo',
 ];
 
+// --- Procesamiento del formulario al hacer POST ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Recoger datos del formulario
+    // Obtener datos del formulario
     $idServicio = $_POST['id'] ?? null;
     $id_empleado = $_POST['id_empleado'] ?? null;
     $id_tipo_lavado = $_POST['id_tipo_lavado'] ?? null;
@@ -29,24 +31,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $estado = $_POST['estado'] ?? 'pendiente';
     $metodo_pago = $_POST['metodo_pago'] ?? 'efectivo';
 
-    // Validaciones básicas (puedes ampliarlas)
+    // Validación básica
     if (!$id_empleado || !$id_tipo_lavado || !$tipo_carro || !$placa || !$fecha) {
         $error = "Por favor, complete todos los campos requeridos.";
     } else {
+        // --- Actualizar servicio existente ---
         if ($idServicio && is_numeric($idServicio)) {
-            // Actualizar servicio existente
-            $stmt = $con->prepare("UPDATE servicios SET id_empleado=?, id_tipo_lavado=?, tipo_carro=?, placa=?, fecha=?, observaciones=?, estado=?, metodo_pago=? WHERE id=?");
+            $stmt = $con->prepare("CALL editar_servicio(?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('iissssssi', $id_empleado, $id_tipo_lavado, $tipo_carro, $placa, $fecha, $observaciones, $estado, $metodo_pago, $idServicio);
             $exito = $stmt->execute();
         } else {
-            // Crear nuevo servicio
-            $stmt = $con->prepare("INSERT INTO servicios (id_empleado, id_tipo_lavado, tipo_carro, placa, fecha, observaciones, estado, metodo_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            // --- Crear nuevo servicio ---
+            $stmt = $con->prepare("CALL crear_servicio(?, ?, ?, ?, ?, ?, ?, ?)");            
             $stmt->bind_param('iissssss', $id_empleado, $id_tipo_lavado, $tipo_carro, $placa, $fecha, $observaciones, $estado, $metodo_pago);
             $exito = $stmt->execute();
         }
 
+        // --- Verificación del resultado ---
         if ($exito) {
-            // Redirigir para evitar reenvío de formulario
             header("Location: servicios.php?mensaje=Servicio guardado correctamente");
             exit;
         } else {
@@ -55,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Si es edición, cargar datos
+// --- Si es modo edición, se cargan los datos del servicio a editar ---
 $idServicio = $_GET['id'] ?? null;
 if ($idServicio && is_numeric($idServicio)) {
     $editar = true;
@@ -65,7 +67,7 @@ if ($idServicio && is_numeric($idServicio)) {
     $resultado = $stmt->get_result();
     if ($resultado->num_rows === 1) {
         $servicio = $resultado->fetch_assoc();
-        // Formato para datetime-local
+        // Convertir formato de fecha a 'datetime-local'
         $servicio['fecha'] = date('Y-m-d\TH:i', strtotime($servicio['fecha']));
     } else {
         $error = "Servicio no encontrado.";
@@ -73,15 +75,23 @@ if ($idServicio && is_numeric($idServicio)) {
     }
 }
 
-// Cargar empleados y tipos de lavado para selects
-$empleados = $con->query("SELECT id, nombre FROM usuario WHERE rol IN ('TecnicoLavado', 'administrador') ORDER BY nombre");
+// Si no es modo edición, precargar tipo de lavado si viene por GET
+if (!$editar && isset($_GET['id_tipo_lavado']) && is_numeric($_GET['id_tipo_lavado'])) {
+    $servicio['id_tipo_lavado'] = $_GET['id_tipo_lavado'];
+}
+
+
+// --- Cargar listas desplegables: empleados y tipos de lavado ---
+$empleados = $con->query("SELECT id, nombre FROM usuario WHERE rol IN ('TecnicoLavado') ORDER BY nombre");
 $tiposLavado = $con->query("SELECT id, nombre, precio FROM tipo_lavado WHERE estado = 'activo' ORDER BY nombre");
 
 include 'header.php';
 ?>
 
+<!-- Estilo específico -->
 <link rel="stylesheet" href="../CSS/serviciosCSS/crear.css"/>
 
+<!-- Contenedor principal -->
 <div class="content-wrapper">
   <section class="content-header">
     <div class="container-fluid">
@@ -101,6 +111,8 @@ include 'header.php';
       <?php if ($error): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
       <?php endif; ?>
+
+      <!-- Formulario para crear o editar servicio -->
       <div class="card card-outline card-primary">
         <div class="card-body">
           <form action="CrearServicio.php<?= $editar ? '?id='.$idServicio : '' ?>" method="POST" novalidate>
@@ -108,6 +120,7 @@ include 'header.php';
               <input type="hidden" name="id" value="<?= htmlspecialchars($idServicio) ?>">
             <?php endif; ?>
 
+            <!-- Selección de empleado -->
             <div class="mb-3">
               <label for="id_empleado" class="form-label">Empleado (Lavador)</label>
               <select name="id_empleado" id="id_empleado" class="form-select" required>
@@ -121,6 +134,7 @@ include 'header.php';
               <div class="invalid-feedback">Debe seleccionar un empleado.</div>
             </div>
 
+            <!-- Tipo de lavado -->
             <div class="mb-3">
               <label for="id_tipo_lavado" class="form-label">Tipo de lavado</label>
               <select name="id_tipo_lavado" id="id_tipo_lavado" class="form-select" required>
@@ -134,11 +148,13 @@ include 'header.php';
               <div class="invalid-feedback">Debe seleccionar un tipo de lavado.</div>
             </div>
 
+            <!-- Precio (se muestra automáticamente) -->
             <div class="mb-3">
               <label for="precio_tipo_lavado" class="form-label">Precio</label>
               <input type="text" id="precio_tipo_lavado" class="form-control" readonly placeholder="Seleccione un tipo de lavado">
             </div>
 
+            <!-- Tipo de carro -->
             <div class="mb-3">
               <label for="tipo_carro" class="form-label">Tipo de carro</label>
               <input type="text" name="tipo_carro" id="tipo_carro" class="form-control" required
@@ -146,6 +162,7 @@ include 'header.php';
               <div class="invalid-feedback">Ingrese el tipo de carro.</div>
             </div>
 
+            <!-- Placa -->
             <div class="mb-3">
               <label for="placa" class="form-label">Placa</label>
               <input type="text" name="placa" id="placa" class="form-control" required
@@ -153,6 +170,7 @@ include 'header.php';
               <div class="invalid-feedback">Ingrese la placa del carro.</div>
             </div>
 
+            <!-- Fecha y hora del servicio -->
             <div class="mb-3">
               <label for="fecha" class="form-label">Fecha y hora</label>
               <input type="datetime-local" name="fecha" id="fecha" class="form-control" required
@@ -160,16 +178,18 @@ include 'header.php';
               <div class="invalid-feedback">Seleccione la fecha y hora del servicio.</div>
             </div>
 
+            <!-- Observaciones -->
             <div class="mb-3">
               <label for="observaciones" class="form-label">Observaciones</label>
               <textarea name="observaciones" id="observaciones" class="form-control" rows="4" placeholder="Detalles adicionales..."><?= htmlspecialchars($servicio['observaciones']) ?></textarea>
             </div>
 
+            <!-- Estado del servicio -->
             <div class="mb-3">
               <label for="estado" class="form-label">Estado del Servicio</label>
               <select name="estado" id="estado" class="form-select" required>
                 <?php
-                $estados = ['pendiente' => 'Pendiente', 'en_proceso' => 'En proceso', 'finalizado' => 'Finalizado'];
+                $estados = ['pendiente' => 'Pendiente', 'finalizado' => 'Finalizado'];
                 foreach ($estados as $key => $val) {
                   $sel = ($servicio['estado'] ?? '') === $key ? 'selected' : '';
                   echo "<option value=\"$key\" $sel>$val</option>";
@@ -179,6 +199,7 @@ include 'header.php';
               <div class="invalid-feedback">Seleccione un estado.</div>
             </div>
 
+            <!-- Método de pago -->
             <div class="mb-3">
               <label for="metodo_pago" class="form-label">Método de pago</label>
               <select name="metodo_pago" id="metodo_pago" class="form-select" required>
@@ -193,6 +214,7 @@ include 'header.php';
               <div class="invalid-feedback">Seleccione un método de pago.</div>
             </div>
 
+            <!-- Botón de acción -->
             <button type="submit" class="btn btn-primary"><?= $editar ? 'Guardar Cambios' : 'Crear Servicio' ?></button>
           </form>
         </div>
@@ -201,8 +223,8 @@ include 'header.php';
   </section>
 </div>
 
+<!-- Script: Mostrar precio según tipo de lavado -->
 <script>
-// Mostrar precio según selección de tipo de lavado
 document.addEventListener('DOMContentLoaded', function () {
   const tipoLavadoSelect = document.getElementById('id_tipo_lavado');
   const precioInput = document.getElementById('precio_tipo_lavado');
@@ -214,10 +236,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   tipoLavadoSelect.addEventListener('change', actualizarPrecio);
-  actualizarPrecio(); // Al cargar
+  actualizarPrecio(); // Mostrar precio al cargar
 });
 
-// Validación simple con Bootstrap 5
+// Validación Bootstrap 5
 (() => {
   'use strict'
   const forms = document.querySelectorAll('form[novalidate]')

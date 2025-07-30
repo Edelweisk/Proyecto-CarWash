@@ -1,42 +1,86 @@
 <?php
+// Incluye el encabezado común (menú, barra superior, etc.)
 include 'header.php';
 
-// --- Consultas principales ---
+// Configura la zona horaria local
+date_default_timezone_set('America/Panama');
+
+// ========================
+// Sección: Fechas y días
+// ========================
+$hoy = date('Y-m-d'); // Fecha actual en formato SQL
+$fechaActual = date('d/m/Y'); // Fecha para mostrar al usuario
+
+// Traducción del nombre del día en inglés a español
+$diaSemanaActual = [
+  'Monday' => 'Lunes',
+  'Tuesday' => 'Martes',
+  'Wednesday' => 'Miércoles',
+  'Thursday' => 'Jueves',
+  'Friday' => 'Viernes',
+  'Saturday' => 'Sábado',
+  'Sunday' => 'Domingo',
+][date('l')];
+
+// ========================
+// Sección: Estadísticas generales
+// ========================
 $totalUsuarios = $con->query("SELECT COUNT(*) AS total FROM usuario")->fetch_assoc()['total'] ?? 0;
 $totalServicios = $con->query("SELECT COUNT(*) AS total FROM servicios")->fetch_assoc()['total'] ?? 0;
-$totalLavadores = $con->query("SELECT COUNT(DISTINCT id_empleado) AS total FROM servicios")->fetch_assoc()['total'] ?? 0;
 
-$hoy = date('Y-m-d');
-$fechaActual = date('d/m/Y');
+// ========================
+// Sección: Lavadores disponibles HOY
+// ========================
+$lavadoresHoyQuery = "
+  SELECT u.id, u.nombre
+  FROM usuario u
+  INNER JOIN lavadores_disponibilidad ld ON ld.id_lavador = u.id
+  WHERE u.rol = 'TecnicoLavado'
+    AND u.estado = 'activo'
+    AND ld.estado = 'activo'
+    AND ld.dia_semana = '$diaSemanaActual'
+";
+$lavadoresHoy = $con->query($lavadoresHoyQuery);
+$totalLavadoresHoy = $lavadoresHoy->num_rows ?? 0;
+
+// ========================
+// Sección: Servicios de hoy y ayer
+// ========================
 $serviciosHoy = $con->query("SELECT COUNT(*) AS total FROM servicios WHERE DATE(fecha) = '$hoy'")->fetch_assoc()['total'] ?? 0;
 
-// Servicios ayer para comparación simple
-$ayer = date('Y-m-d', strtotime('-1 day'));
+$ayer = date('Y-m-d', strtotime('-1 day')); // Fecha de ayer
 $serviciosAyer = $con->query("SELECT COUNT(*) AS total FROM servicios WHERE DATE(fecha) = '$ayer'")->fetch_assoc()['total'] ?? 0;
-$diferenciaServicios = $serviciosHoy - $serviciosAyer;
 
-// Últimos servicios
+$diferenciaServicios = $serviciosHoy - $serviciosAyer; // Comparación para mostrar flecha ↑ ↓
+
+// ========================
+// Sección: Últimos registros
+// ========================
+// Últimos 5 servicios realizados
 $ultimos_servicios_sql = "
-    SELECT s.*, u.nombre 
-    FROM servicios s 
-    LEFT JOIN usuario u ON s.id_empleado = u.id 
-    ORDER BY s.fecha DESC 
-    LIMIT 5
+  SELECT s.*, u.nombre 
+  FROM servicios s 
+  LEFT JOIN usuario u ON s.id_empleado = u.id 
+  ORDER BY s.fecha DESC 
+  LIMIT 5
 ";
 $ultimos_servicios = $con->query($ultimos_servicios_sql);
 
-// Últimos usuarios registrados (sin rol)
+// Últimos 5 usuarios registrados
 $ultimos_usuarios_sql = "SELECT nombre, usuario, fechaRegistro FROM usuario ORDER BY fechaRegistro DESC LIMIT 5";
 $ultimos_usuarios = $con->query($ultimos_usuarios_sql);
 
-// Servicios últimos 7 días para gráfica
+// ========================
+// Sección: Servicios últimos 7 días
+// ========================
 $servicios_7dias = [];
 for ($i = 6; $i >= 0; $i--) {
-    $fecha = date('Y-m-d', strtotime("-$i days"));
-    $count = $con->query("SELECT COUNT(*) AS total FROM servicios WHERE DATE(fecha) = '$fecha'")->fetch_assoc()['total'] ?? 0;
-    $servicios_7dias[] = ['fecha' => date('d/m', strtotime($fecha)), 'total' => (int)$count];
+  $fecha = date('Y-m-d', strtotime("-$i days"));
+  $count = $con->query("SELECT COUNT(*) AS total FROM servicios WHERE DATE(fecha) = '$fecha'")->fetch_assoc()['total'] ?? 0;
+  $servicios_7dias[] = ['fecha' => date('d/m', strtotime($fecha)), 'total' => (int)$count];
 }
 ?>
+
 
 <!-- AOS y Chart.js -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet" />
@@ -44,6 +88,7 @@ for ($i = 6; $i >= 0; $i--) {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>AOS.init();</script>
 <link rel="stylesheet" href="../CSS/IndexCss/Index.css" />
+
 <div class="content-wrapper">
   <!-- Encabezado -->
   <section class="content-header">
@@ -51,39 +96,35 @@ for ($i = 6; $i >= 0; $i--) {
       <div class="row mb-2">
         <div class="col-sm-8">
           <h1 data-aos="fade-right">Bienvenido, <?php echo htmlspecialchars($nombre ?? 'Administrador'); ?> 👋</h1>
-          <p class="text-muted" data-aos="fade-left">Hoy es <?php echo $fechaActual; ?> | Panel de administración</p>
+          <p class="text-muted" data-aos="fade-left">Hoy es <?php echo $fechaActual . " ($diaSemanaActual)"; ?> | Panel de administración</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Botones rápidos -->
+  <!-- Botones -->
   <section class="mb-4" data-aos="fade-up">
     <div class="container-fluid d-flex gap-3 flex-wrap">
-       <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
-      <a href="CrearServicio.php?action=new" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Servicio</a>
-      <a href="Registrar_Empleado.php" class="btn btn-success"><i class="fas fa-user-plus"></i> Nuevo Usuario</a>
+      <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
+        <a href="CrearServicio.php?action=new" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Servicio</a>
+        <a href="Registrar_Empleado.php" class="btn btn-success"><i class="fas fa-user-plus"></i> Nuevo Usuario</a>
       <?php endif; ?>
       <a href="lavadoresactivos.php" class="btn btn-info"><i class="fas fa-user-cog"></i> Ver Lavadores</a>
-            <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
-
-      <a href="reportes.php" class="btn btn-warning"><i class="fas fa-chart-line"></i> Reportes</a>
+      <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
+        <a href="reportes.php" class="btn btn-warning"><i class="fas fa-chart-line"></i> Reportes</a>
       <?php endif; ?>
       <div class="col-sm-4 text-end">
-          <a href="crearServicio.php" class="btn btn-success">
-            <i class="fas fa-plus"></i> Nuevo Servicio
-          </a>
         </div>
     </div>
   
   </section>
 
-  <!-- Estadísticas rápidas -->
+  <!-- Estadísticas -->
   <section class="content">
     <div class="container-fluid">
       <div class="row">
 
-        <!-- Total Servicios -->
+        <!-- Servicios -->
         <div class="col-lg-3 col-6" data-aos="zoom-in">
           <div class="small-box bg-primary">
             <div class="inner">
@@ -95,6 +136,7 @@ for ($i = 6; $i >= 0; $i--) {
           </div>
         </div>
 
+        <!-- Usuarios -->
         <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?>
         <div class="col-lg-3 col-6" data-aos="zoom-in">
           <div class="small-box bg-success">
@@ -106,44 +148,43 @@ for ($i = 6; $i >= 0; $i--) {
             <a href="usuarios.php" class="small-box-footer">Gestionar usuarios <i class="fas fa-arrow-circle-right"></i></a>
           </div>
         </div>
-<?php endif; ?>
-        <!-- Lavadores -->
+        <?php endif; ?>
+
+        <!-- Lavadores activos hoy -->
         <div class="col-lg-3 col-6" data-aos="zoom-in">
           <div class="small-box bg-info">
             <div class="inner">
-              <h3><?php echo $totalLavadores; ?></h3>
-              <p>Lavadores activos</p>
+              <h3><?php echo $totalLavadoresHoy; ?></h3>
+              <p>Lavadores hoy (<?php echo $diaSemanaActual; ?>)</p>
             </div>
             <div class="icon"><i class="fas fa-user-cog"></i></div>
             <a href="lavadoresactivos.php?rol=Lavador" class="small-box-footer">Ver lavadores <i class="fas fa-arrow-circle-right"></i></a>
           </div>
         </div>
 
-        <!-- Resumen del Día con comparación -->
+        <!-- Servicios de hoy -->
         <div class="col-lg-3 col-6" data-aos="zoom-in">
           <div class="small-box bg-warning">
             <div class="inner">
               <h3>
                 <?php echo $serviciosHoy; ?>
                 <?php if ($diferenciaServicios > 0): ?>
-                  <small class="text-success" title="Incremento desde ayer">+<?php echo $diferenciaServicios; ?> ↑</small>
+                  <small class="text-success">+<?php echo $diferenciaServicios; ?> ↑</small>
                 <?php elseif ($diferenciaServicios < 0): ?>
-                  <small class="text-danger" title="Disminución desde ayer"><?php echo $diferenciaServicios; ?> ↓</small>
+                  <small class="text-danger"><?php echo $diferenciaServicios; ?> ↓</small>
                 <?php else: ?>
-                  <small class="text-muted" title="Sin cambios">=</small>
+                  <small class="text-muted">=</small>
                 <?php endif; ?>
               </h3>
               <p>Servicios hoy</p>
             </div>
-          <div class="icon"><i class="fas fa-user-cog"></i></div>
+            <div class="icon"><i class="fas fa-calendar-day"></i></div>
             <a href="resumendiario.php?rol=Lavador" class="small-box-footer">Ver resumen diario <i class="fas fa-arrow-circle-right"></i></a>
           </div>
-          
         </div>
-
       </div>
 
-      <!-- Gráfica servicios últimos 7 días -->
+      <!-- Gráfica 7 días -->
       <div class="row mt-4" data-aos="fade-up">
         <div class="col-lg-8 mx-auto">
           <div class="card card-outline card-primary">
@@ -157,7 +198,7 @@ for ($i = 6; $i >= 0; $i--) {
         </div>
       </div>
 
-      <!-- Últimos Servicios Registrados -->
+      <!-- Últimos Servicios -->
       <div class="row mt-4">
         <div class="col-lg-6" data-aos="fade-up">
           <div class="card card-outline card-primary">
@@ -197,7 +238,7 @@ for ($i = 6; $i >= 0; $i--) {
           </div>
         </div>
 
-        <!-- Últimos Usuarios Registrados -->
+        <!-- Últimos usuarios -->
         <div class="col-lg-6" data-aos="fade-up">
           <div class="card card-outline card-success">
             <div class="card-header">
@@ -231,25 +272,25 @@ for ($i = 6; $i >= 0; $i--) {
         </div>
       </div>
 
-      <!-- Estado simple del sistema -->
+      <!-- Estado sistema -->
       <div class="row mt-4" data-aos="fade-up">
         <div class="col-lg-12">
           <div class="alert alert-info d-flex align-items-center" role="alert">
-            <i class="fas float-start me-2"></i>
+            <i class="fas fa-server me-2"></i>
             <div>
               Estado del sistema: <strong>Conectado y funcionando correctamente</strong>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   </section>
 </div>
 
 <script>
-  // Gráfica con Chart.js
   const ctx = document.getElementById('chartServicios').getContext('2d');
+
+  // Datos enviados desde PHP al gráfico
   const data = {
     labels: <?php echo json_encode(array_column($servicios_7dias, 'fecha')); ?>,
     datasets: [{
@@ -264,22 +305,19 @@ for ($i = 6; $i >= 0; $i--) {
       borderWidth: 3,
     }]
   };
-  const config = {
-    type: 'line',
+
+  // Configuración del gráfico de barras
+  new Chart(ctx, {
+    type: 'bar',
     data: data,
     options: {
-      scales: {
-        y: { beginAtZero: true, stepSize: 1 },
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: true }
-      },
       responsive: true,
       maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, stepSize: 1 } }
     }
-  };
-  const chartServicios = new Chart(ctx, config);
+  });
 </script>
+
 
 <?php include 'footer.php'; ?>

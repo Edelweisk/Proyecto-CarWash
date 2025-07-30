@@ -1,66 +1,24 @@
 <?php
+// Incluir la cabecera HTML y conexión a la base de datos
 include 'header.php';
 include '../conexion.php';
 
-$sql = "SELECT nombre, descripcion, precio, imagen FROM tipo_lavado";
+// Consulta para obtener los tipos de lavado con todos los detalles necesarios, incluyendo el ID
+$sql = "SELECT id, nombre, descripcion, precio, imagen FROM tipo_lavado";
+
+// Ejecutar la consulta
 $resultado = mysqli_query($con, $sql);
 
+// Validar si la consulta tuvo errores y detener la ejecución en caso de fallo
 if (!$resultado) {
     die("Error en la consulta: " . mysqli_error($con));
 }
 ?>
 
-<style>
+<!-- Enlace al archivo CSS específico para mostrar los servicios disponibles -->
+<link rel="stylesheet" href="../CSS/serviciosCSS/servicioactivo.css">
 
-.lavados-container {
-  padding: 2rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.card-lavado {
-  background: #ffffff;
-  border-radius: 1rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: transform 0.3s ease;
-}
-
-.card-lavado:hover {
-  transform: translateY(-5px);
-}
-
-.card-lavado img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  border-bottom: 1px solid #ccc;
-}
-
-.card-lavado .contenido {
-  padding: 1rem;
-}
-
-.card-lavado h4 {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-  color: #007bff;
-}
-
-.card-lavado p {
-  margin: 0.3rem 0;
-  font-size: 0.95rem;
-  color: #444;
-}
-
-.card-lavado .precio {
-  font-weight: bold;
-  color: #28a745;
-  font-size: 1.1rem;
-}
-</style>
-
+<!-- Contenedor principal del contenido -->
 <div class="content-wrapper">
   <section class="content-header">
     <h1>Servicios disponibles para tu vehículo</h1>
@@ -68,33 +26,46 @@ if (!$resultado) {
 
   <section class="content">
     <div class="lavados-container">
+      <!-- Verificar si hay tipos de lavado disponibles -->
+      <?php if(mysqli_num_rows($resultado) === 0): ?>
+        <p>No hay tipos de lavado disponibles.</p>
+      <?php else: ?>
+        <!-- Recorrer cada tipo de lavado para mostrarlo en la interfaz -->
+        <?php while ($fila = mysqli_fetch_assoc($resultado)): ?>
+          <?php
+            // Obtener el nombre de la imagen desde la base de datos y construir la ruta relativa
+            $nombreImg = htmlspecialchars($fila['imagen']);
+            $rutaRelativa = "/IMG/servicios/" . $nombreImg;
 
-    <?php if(mysqli_num_rows($resultado) === 0): ?>
-      <p>No hay tipos de lavado disponibles.</p>
-    <?php else: ?>
-      <?php while ($fila = mysqli_fetch_assoc($resultado)): ?>
-        <?php
-          $nombreImg = htmlspecialchars($fila['imagen']);
-          $rutaRelativa = "/IMG/servicios/" . $nombreImg;
-          $rutaAbsoluta = $_SERVER['DOCUMENT_ROOT'] . $rutaRelativa;
+            // Construir la ruta absoluta para verificar si la imagen existe en el servidor
+            $rutaAbsoluta = $_SERVER['DOCUMENT_ROOT'] . $rutaRelativa;
 
-          if (!file_exists($rutaAbsoluta)) {
-              $rutaRelativa = "/IMG/servicios/LogoCarWash.png"; // Imagen por defecto
-          }
-        ?>
-        <div class="card-lavado">
-          <img src="<?php echo $rutaRelativa; ?>" alt="<?php echo htmlspecialchars($fila['nombre']); ?>">
-          <div class="contenido">
-            <h4><?php echo htmlspecialchars($fila['nombre']); ?></h4>
-            <p><?php echo htmlspecialchars($fila['descripcion']); ?></p>
-            <p class="precio">$<?php echo number_format($fila['precio'], 2); ?></p>
+            // Si la imagen no existe físicamente, usar una imagen por defecto
+            if (!file_exists($rutaAbsoluta)) {
+                $rutaRelativa = "/IMG/servicios/LogoCarWash.png"; // Imagen por defecto
+            }
+          ?>
+          <!-- Tarjeta visual de cada tipo de lavado -->
+          <div class="card-lavado">
+            <img src="<?php echo $rutaRelativa; ?>" alt="<?php echo htmlspecialchars($fila['nombre']); ?>">
+            <div class="contenido">
+              <!-- Nombre del servicio -->
+              <h4><?php echo htmlspecialchars($fila['nombre']); ?></h4>
+              <!-- Descripción del servicio -->
+              <p><?php echo htmlspecialchars($fila['descripcion']); ?></p>
+              <!-- Precio del servicio con formato -->
+              <p class="precio">$<?php echo number_format($fila['precio'], 2); ?></p>
+              <!-- Enlace que redirige al formulario de creación con el tipo de lavado preseleccionado -->
+              <a href="CrearServicio.php?id_tipo_lavado=<?php echo $fila['id']; ?>" class="agregar-servicio">+ Agregar servicio</a>     
+            </div>
           </div>
-        </div>
-      <?php endwhile; ?>
-    <?php endif; ?>
-
+        <?php endwhile; ?>
+      <?php endif; ?>
     </div>
   </section>
 </div>
 
-<?php include 'footer.php'; ?>
+<?php 
+// Incluir el pie de página HTML
+include 'footer.php'; 
+?>

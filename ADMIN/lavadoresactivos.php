@@ -1,13 +1,23 @@
 <?php
-require_once '../conexion.php';
-include 'header.php';
+require_once '../conexion.php'; // Conexión a la base de datos
+include 'header.php'; // Inclusión del encabezado de la página (navbar, estilos, etc.)
 
-// Obtener día actual en español (Lunes, Martes, etc.)
+// Obtener el día actual en inglés y traducirlo al español para usarlo más adelante
+$diaHoy = [
+    'Monday'    => 'Lunes',
+    'Tuesday'   => 'Martes',
+    'Wednesday' => 'Miércoles',
+    'Thursday'  => 'Jueves',
+    'Friday'    => 'Viernes',
+    'Saturday'  => 'Sábado',
+    'Sunday'    => 'Domingo',
+][date('l')];
+
+// Lista completa de días en español para usar como referencia
 $diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-$indiceDiaHoy = date('N') - 1; // 0 para lunes ... 6 para domingo
-$diaHoy = $diasSemana[$indiceDiaHoy];
 
-// Obtener todos los lavadores activos con sus datos y servicios
+// Consulta SQL para obtener todos los lavadores activos, con total de servicios,
+// última fecha de servicio y cuántos trabajos ha hecho hoy
 $query = "
     SELECT u.id, u.nombre, u.imagen,
            COUNT(s.id) AS total_servicios,
@@ -22,16 +32,16 @@ $query = "
 
 $resultado = $con->query($query);
 
-// Armar lista de IDs para obtener disponibilidad
+// Preparar arreglo con los IDs de los lavadores encontrados
 $idsLavadores = [];
 if ($resultado && $resultado->num_rows > 0) {
     while ($row = $resultado->fetch_assoc()) {
         $idsLavadores[] = $row['id'];
     }
-    // Reiniciar puntero para reutilizar resultado
-    $resultado->data_seek(0);
+    $resultado->data_seek(0); // Reiniciar el puntero para poder iterar nuevamente
 }
 
+// Obtener la disponibilidad por día de los lavadores
 $disponibilidadLavadores = [];
 if (count($idsLavadores) > 0) {
     $idsStr = implode(',', $idsLavadores);
@@ -46,7 +56,7 @@ if (count($idsLavadores) > 0) {
     }
 }
 
-// Calcular lavadores disponibles por día para gráfica
+// Contar cuántos lavadores hay por día para el gráfico de barras
 $lavadoresPorDia = array_fill_keys($diasSemana, 0);
 foreach ($disponibilidadLavadores as $dias) {
     foreach ($dias as $dia) {
@@ -57,29 +67,32 @@ foreach ($disponibilidadLavadores as $dias) {
 }
 ?>
 
-<!-- AOS CSS -->
+<!-- Carga de estilos para animaciones y estilos personalizados -->
 <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 <link rel="stylesheet" href="../CSS/EmpleadosCSS/activos.css" />
 
 <div class="content-wrapper">
+  <!-- Título de la sección -->
   <section class="content-header">
     <h1>Lavadores Disponibles | <small>Estado actual y programación semanal</small></h1>
   </section>
 
   <section class="content">
     <div class="row">
+      <!-- Mostrar cada lavador en una tarjeta -->
       <?php if ($resultado && $resultado->num_rows > 0): ?>
         <?php while ($lavador = $resultado->fetch_assoc()): ?>
           <?php 
-            $diasDisponibles = $disponibilidadLavadores[$lavador['id']] ?? [];
-            $disponibleHoy = in_array($diaHoy, $diasDisponibles);
+            $diasDisponibles = $disponibilidadLavadores[$lavador['id']] ?? []; // Dias de disponibilidad por lavador
+            $disponibleHoy = in_array($diaHoy, $diasDisponibles); // Si está disponible hoy
           ?>
           <div class="col-md-4" data-aos="fade-up" data-aos-delay="<?= ($lavador['id'] % 3) * 100 ?>">
             <div class="card tarjeta-lavador shadow-sm">
               <div class="card-body text-center">
 
-            
-                <a <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?> href="editarDisponibilidad.php?id=<?php endif; ?><?= $lavador['id'] ?>" style="text-decoration:none; color:inherit;">
+                <!-- Link solo si es administrador -->
+                <a <?php if (isset($_SESSION['rol']) && strtolower($_SESSION['rol']) === 'administrador'): ?> href="editarDisponibilidad.php?id=<?= $lavador['id'] ?>" <?php endif; ?> style="text-decoration:none; color:inherit;">
+                  <!-- Imagen del lavador o default si no existe -->
                   <img 
                     src="../IMG/usuarios/<?= htmlspecialchars($lavador['imagen']) ?>" 
                     alt="Foto de <?= htmlspecialchars($lavador['nombre']) ?>"
@@ -124,7 +137,7 @@ foreach ($disponibilidadLavadores as $dias) {
       <?php endif; ?>
     </div>
 
-    <!-- Gráfico de disponibilidad semanal -->
+    <!-- Gráfico resumen de disponibilidad semanal -->
     <div class="card mt-4">
       <div class="card-header">
         <h3 class="card-title">Gráfico: Lavadores activos por día</h3>
@@ -136,21 +149,21 @@ foreach ($disponibilidadLavadores as $dias) {
   </section>
 </div>
 
-<!-- AOS JS -->
+<!-- Librerías para animaciones y gráficos -->
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 <script>AOS.init({ duration: 800, easing: 'ease-in-out', once: true });</script>
 
-<!-- Chart.js -->
+<!-- Chart.js para el gráfico de barras -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const ctx = document.getElementById('graficoLavadores').getContext('2d');
 const grafico = new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: <?= json_encode($diasSemana) ?>,
+        labels: <?= json_encode($diasSemana) ?>, // Etiquetas del eje X
         datasets: [{
             label: 'Lavadores activos',
-            data: <?= json_encode(array_values($lavadoresPorDia)) ?>,
+            data: <?= json_encode(array_values($lavadoresPorDia)) ?>, // Datos del eje Y
             backgroundColor: 'rgba(40, 167, 69, 0.5)',
             borderColor: 'rgba(40, 167, 69, 1)',
             borderWidth: 1,

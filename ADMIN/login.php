@@ -1,33 +1,64 @@
 <?php
+// ==========================
+// Sección: Manejo de sesión
+// ==========================
+// Verifica si la sesión ya está iniciada, si no, la inicia
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// ==========================
+// Sección: Conexión a BD
+// ==========================
+// Incluye el archivo que contiene la conexión a la base de datos
 require_once("../conexion.php");
 
-
-session_start();
+// ==========================
+// Sección: Redirección si ya hay sesión activa
+// ==========================
+// Si el usuario ya ha iniciado sesión, lo redirige al dashboard
 if (isset($_SESSION['id_usuario'])) {
     header("Location: index.php");
     exit();
 }
 
+// ==========================
+// Sección: Procesamiento del formulario de login
+// ==========================
 if (isset($_POST['btn_ingresar'])) {
+    // Obtiene y limpia los campos del formulario
     $usuario = trim($_POST['usuario']);
     $password = $_POST['password'];
 
+    // Verifica que ambos campos no estén vacíos
     if ($usuario === "" || $password === "") {
         echo "<script>alert('Por favor complete ambos campos.');</script>";
     } else {
-        $stmt = $con->prepare("SELECT id, nombre, imagen, password, estado FROM usuario WHERE usuario = ?");
+        // Llama al procedimiento almacenado "login" para obtener los datos del usuario
+        $stmt = $con->prepare("CALL login (?)");
         $stmt->bind_param("s", $usuario);
         $stmt->execute();
         $resultado = $stmt->get_result();
 
+        // Verifica si se encontró un usuario con ese nombre
         if ($resultado->num_rows === 1) {
             $fila = $resultado->fetch_assoc();
 
+            // Verifica si el estado del usuario es "activo"
             if ($fila['estado'] !== 'activo') {
                 echo "<script>alert('Usuario inactivo, contacte con el administrador.');</script>";
             } else {
-                // Compara la contraseña en texto plano
+                // Verifica que la contraseña ingresada coincida (en texto plano, sin hash)
                 if ($fila['password'] === $password) {
+
+                    // Bloquea el acceso a usuarios con rol "tecnicolavado"
+                    if (strtolower($fila['rol']) === 'tecnicolavado') {
+                        session_destroy();
+                        echo "<script>alert('Acceso denegado para técnicos de lavado.'); window.location.href='login.php';</script>";
+                        exit();
+                    }
+
+                    // Guarda los datos del usuario en la sesión y redirige
                     $_SESSION['id_usuario'] = $fila['id'];
                     $_SESSION['nombre'] = $fila['nombre'];
                     $_SESSION['imagen'] = $fila['imagen'];
@@ -41,10 +72,13 @@ if (isset($_POST['btn_ingresar'])) {
             echo "<script>alert('Usuario o contraseña incorrectos.');</script>";
         }
 
+        // Cierra la consulta
         $stmt->close();
     }
 }
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="es">
@@ -53,25 +87,29 @@ if (isset($_POST['btn_ingresar'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login - Debug Car Wash</title>
 
-  <!-- Fuente Poppins -->
+  <!-- ===========================
+       Sección: Recursos externos
+       =========================== -->
+  <!-- Fuente Poppins desde Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
-
-  <!-- Font Awesome -->
+  <!-- Íconos Font Awesome para los inputs -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
-  <!-- Bootstrap 4 -->
+  <!-- Bootstrap 4 para estilos base y responsividad -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-
-  <!-- Estilo personalizado -->
+  <!-- Estilo personalizado del login -->
   <link rel="stylesheet" href="../CSS/CSSlogin/backgronud.css" />
 </head>
 <body>
 
-  <div class="login-container">
-    <div class="login-card shadow-lg">
+<!-- ===============================
+     Sección: Contenedor principal
+     =============================== -->
+<div class="login-container">
+  <div class="login-card shadow-lg">
 
-      <!-- Burbujas animadas sutiles -->
-      <div class="bubbles">
+    <!-- Animaciones decorativas con burbujas -->
+    <div class="bubbles">
+      <!-- Cada burbuja tiene propiedades CSS distintas para el efecto animado -->
         <span style="--size:25px; --left:10%; --duration:10s; --delay:0s;"></span>
         <span style="--size:20px; --left:25%; --duration:12s; --delay:1s;"></span>
         <span style="--size:30px; --left:40%; --duration:14s; --delay:2s;"></span>
@@ -92,78 +130,83 @@ if (isset($_POST['btn_ingresar'])) {
         <span style="--size:20px; --left:52%; --duration:13s; --delay:0.9s;"></span>
         <span style="--size:28px; --left:68%; --duration:12s; --delay:2.4s;"></span>
         <span style="--size:18px; --left:82%; --duration:10s; --delay:1.1s;"></span>
+      <!-- ...otras burbujas... -->
+    </div>
+
+    <!-- Logo y título -->
+    <div class="text-center mb-4">
+      <img src="../CSS/CSSlogin/Imagenes/LogoCar.PNG" class="logo" alt="Logo Car Wash" style="max-width: 300px; height: 200px;" />
+      <p class="subtitle">Iniciar sesión</p>
+    </div>
+
+    <!-- ==============================
+         Sección: Formulario de acceso
+         ============================== -->
+    <form action="login.php" method="post" autocomplete="off" novalidate>
+      <!-- Campo de usuario -->
+      <div class="form-group position-relative">
+        <i class="fas fa-user icon-input"></i>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Usuario"
+          name="usuario"
+          required
+          autofocus
+          autocomplete="username"
+        />
+        <div class="invalid-feedback">Por favor ingrese su usuario.</div>
       </div>
 
-      <div class="text-center mb-4">
-       <img src="../IMG/debuglogo2.png" alt="Logo" style="max-width: 300px; max-height: 300px;"> 
-        <p class="subtitle">Iniciar sesión</p>
+      <!-- Campo de contraseña -->
+      <div class="form-group position-relative">
+        <i class="fas fa-lock icon-input"></i>
+        <input
+          type="password"
+          class="form-control"
+          placeholder="Contraseña"
+          name="password"
+          required
+          autocomplete="current-password"
+        />
+        <div class="invalid-feedback">Por favor ingrese su contraseña.</div>
       </div>
 
-      <form action="login.php" method="post" autocomplete="off" novalidate>
-        <div class="form-group position-relative">
-          <i class="fas fa-user icon-input"></i>
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Usuario"
-            name="usuario"
-            required
-            autofocus
-            autocomplete="username"
-          />
-          <div class="invalid-feedback">Por favor ingrese su usuario.</div>
-        </div>
+      <!-- Botón para enviar el formulario -->
+      <button type="submit" name="btn_ingresar" class="btn btn-primary btn-block">Entrar</button>
+    </form>
 
-        <div class="form-group position-relative">
-          <i class="fas fa-lock icon-input"></i>
-          <input
-            type="password"
-            class="form-control"
-            placeholder="Contraseña"
-            name="password"
-            required
-            autocomplete="current-password"
-          />
-          <div class="invalid-feedback">Por favor ingrese su contraseña.</div>
-        </div>
-
-        <button type="submit" name="btn_ingresar" class="btn btn-primary btn-block">Entrar</button>
-      </form>
-
-      <div class="text-center mt-3">
-        <p> ¿Nuevo miembro? <a href="register.php" class="register-link"> ¡Regístrate aquí!</a> </p>
-      </div>
+    <!-- Enlace para registro de nuevos usuarios -->
+    <div class="text-center mt-3">
+      <a href="register.php" class="register-link">Registrar nuevos miembros</a>
     </div>
   </div>
+</div>
 
-  <!-- Scripts -->
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // Validación básica Bootstrap 4
-    (function () {
-      'use strict';
-      window.addEventListener(
-        'load',
-        function () {
-          const forms = document.getElementsByTagName('form');
-          Array.prototype.filter.call(forms, function (form) {
-            form.addEventListener(
-              'submit',
-              function (event) {
-                if (form.checkValidity() === false) {
-                  event.preventDefault();
-                  event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-              },
-              false
-            );
-          });
-        },
-        false
-      );
-    })();
-  </script>
+<!-- ========================
+     Sección: Scripts JS
+     ======================== -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+<!-- Validación visual con Bootstrap -->
+<script>
+  (function () {
+    'use strict';
+    window.addEventListener('load', function () {
+      const forms = document.getElementsByTagName('form');
+      Array.prototype.filter.call(forms, function (form) {
+        form.addEventListener('submit', function (event) {
+          if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
+    }, false);
+  })();
+</script>
+
 </body>
 </html>

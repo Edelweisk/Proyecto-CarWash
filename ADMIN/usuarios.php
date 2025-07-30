@@ -1,39 +1,46 @@
 <?php
+// Incluye la conexión a la base de datos y la cabecera común HTML
 require_once('../conexion.php');
 include 'header.php';
 ?>
 
-<!-- DataTables CSS -->
+<!-- Importación de estilos CSS para DataTables y estilos personalizados -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" />
 <link rel="stylesheet" href="../CSS/EmpleadosCSS/Empleado.css" />
 
 <div class="content-wrapper">
+  <!-- Sección del encabezado del contenido -->
   <section class="content-header">
     <div class="container-fluid">
       <div class="row mb-2 align-items-center">
         <div class="col-sm-6">
+          <!-- Título principal de la página -->
           <h1 class="fw-bold">Gestión de Empleados</h1>
         </div>
         <div class="col-sm-6 text-end">
+          <!-- Botón para registrar un nuevo empleado -->
           <a href="Registrar_Empleado.php" class="btn btn-primary">
             <i class="fas fa-user-plus"></i> Nuevo Empleado
           </a>
         </div>
       </div>
     </div>
-    
   </section>
 
+  <!-- Sección principal del contenido donde se muestra la tabla -->
   <section class="content">
     <div class="container-fluid">
       <div class="row">
         <div class="col-12">
+          <!-- Tarjeta que contiene la tabla de empleados -->
           <div class="card shadow-sm rounded border-0">
             <div class="card-body">
+              <!-- Tabla que muestra los empleados con id, foto, datos personales, rol, estado y acciones -->
               <table id="usuariosTable" class="table table-striped table-bordered table-hover" style="width:100%">
                 <thead class="table-primary text-center">
                   <tr>
+                    <!-- Encabezados de columnas -->
                     <th>#</th>
                     <th>Foto</th>
                     <th>Nombre</th>
@@ -55,17 +62,24 @@ include 'header.php';
                 </thead>
                 <tbody>
                   <?php
+                  // Consulta para obtener todos los usuarios ordenados por fecha de registro descendente
                   $sql = "SELECT * FROM usuario ORDER BY fechaRegistro DESC";
                   $result = $con->query($sql);
-                  $contador = 1;
+                  $contador = 1; // Contador para numerar las filas
+
+                  // Recorrer cada fila de resultado para llenar la tabla
                   while ($fila = $result->fetch_assoc()) {
+                    // Definir la ruta de la foto: si no existe imagen, usar imagen por defecto
                     $foto = !empty($fila['imagen']) && file_exists("../IMG/usuarios/" . $fila['imagen'])
                       ? "../IMG/usuarios/" . $fila['imagen']
                       : "../IMG/usuarios/default.png";
                   ?>
                     <tr>
+                      <!-- Numeración -->
                       <td class="text-center"><?= $contador++; ?></td>
+                      <!-- Foto redonda del usuario -->
                       <td class="text-center"><img src="<?= $foto ?>" alt="Foto" width="50" height="50" class="rounded-circle"></td>
+                      <!-- Datos personales y de usuario con protección HTML para evitar XSS -->
                       <td><?= htmlspecialchars($fila['nombre']); ?></td>
                       <td><?= date('d/m/Y', strtotime($fila['fecha_nacimiento'])); ?></td>
                       <td><?= htmlspecialchars($fila['numero_identificacion']); ?></td>
@@ -76,14 +90,18 @@ include 'header.php';
                       <td><?= htmlspecialchars($fila['numero_emergencia']); ?></td>
                       <td><?= htmlspecialchars($fila['email']); ?></td>
                       <td><?= htmlspecialchars($fila['usuario']); ?></td>
+                      <!-- Mostrar la contraseña con formato de código (ojo: no recomendado mostrar contraseñas en texto plano en producción) -->
                       <td><code><?= htmlspecialchars($fila['password']); ?></code></td>
                       <td><?= htmlspecialchars($fila['rol']); ?></td>
+                      <!-- Estado con badge de color según activo o inactivo -->
                       <td>
                         <span class="badge bg-<?= $fila['estado'] === 'activo' ? 'success' : 'secondary'; ?>">
                           <?= ucfirst($fila['estado']); ?>
                         </span>
                       </td>
+                      <!-- Fecha y hora del registro -->
                       <td><?= date('d/m/Y H:i', strtotime($fila['fechaRegistro'])); ?></td>
+                      <!-- Botones para editar y eliminar usuario -->
                       <td class="text-center">
                         <a href="editarUsuarios.php?id=<?= $fila['id']; ?>" class="btn btn-sm btn-warning me-1" title="Editar usuario">
                           <i class="fas fa-edit"></i>
@@ -93,7 +111,7 @@ include 'header.php';
                         </button>
                       </td>
                     </tr>
-                  <?php } ?>
+                  <?php } // Fin del while ?>
                 </tbody>
               </table>
             </div>
@@ -104,7 +122,7 @@ include 'header.php';
   </section>
 </div>
 
-<!-- Scripts necesarios -->
+<!-- Inclusión de scripts JS externos para DataTables, exportación, y alertas -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -119,49 +137,83 @@ include 'header.php';
 
 <script>
   $(document).ready(function() {
+    // Inicializar DataTable con opciones personalizadas
     $('#usuariosTable').DataTable({
       language: {
-        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' // Traducción al español
       },
-      lengthMenu: [5, 10, 25, 50],
-      pageLength: 10,
-      responsive: true,
-      order: [[15, 'desc']],
-      dom: 'Bfrtip',
+      lengthMenu: [5, 10, 25, 50], // Opciones de filas por página
+      pageLength: 10, // Número de filas por defecto
+      responsive: true, // Responsive para diferentes dispositivos
+      order: [[15, 'desc']], // Ordenar inicialmente por fecha de registro (columna 16 - índice 15) descendente
+      dom: 'Bfrtip', // Control del layout de botones, filtro, tabla, etc.
       buttons: [
         {
-          extend: 'copyHtml5',
+          extend: 'copyHtml5', // Botón para copiar tabla al portapapeles
           text: '<i class="fas fa-copy"></i> Copiar',
           className: 'btn btn-secondary btn-sm'
         },
         {
-          extend: 'excelHtml5',
+          extend: 'excelHtml5', // Botón para exportar tabla a Excel
           text: '<i class="fas fa-file-excel"></i> Excel',
           className: 'btn btn-success btn-sm'
         }
       ]
     });
 
-    $('.btn-eliminar').click(function() {
-      const userId = $(this).data('id');
-      Swal.fire({
-        title: '¿Estás seguro?',
-        text: "¡Esta acción eliminará el usuario permanentemente!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = `eliminarUsuario.php?id=${userId}`;
+    // Delegación de evento para botón eliminar usuario con confirmación SweetAlert2
+   $('#usuariosTable').on('click', '.btn-eliminar', function () {
+  const userId = $(this).data('id');
+
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: "¡Esta acción eliminará el usuario permanentemente!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Aquí usamos AJAX para enviar el ID por POST
+      $.ajax({
+        url: 'eliminarUsuario.php',
+        type: 'POST',
+        data: { id: userId },
+        success: function (response) {
+          if (response.trim() === 'ok') {
+            Swal.fire(
+              '¡Eliminado!',
+              'El usuario ha sido eliminado correctamente.',
+              'success'
+            ).then(() => {
+              location.reload(); // Recargar la tabla para reflejar los cambios
+            });
+          } else {
+            Swal.fire(
+              'Error',
+              'No se pudo eliminar el usuario. Intenta nuevamente.',
+              'error'
+            );
+          }
+        },
+        error: function () {
+          Swal.fire(
+            'Error',
+            'Ocurrió un problema con la solicitud.',
+            'error'
+          );
         }
       });
-    });
+    }
   });
+});
 
-  
+  });
 </script>
 
-<?php include 'footer.php'; ?>
+<?php 
+// Incluir el pie de página HTML común
+include 'footer.php'; 
+?>

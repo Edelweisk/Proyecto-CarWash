@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
     // ==========================
 
     // Se prepara una consulta SQL segura para eliminar un servicio por su ID
-    $stmt = $con->prepare("DELETE FROM servicios WHERE id = ?");
+    $stmt = $con->prepare("DELETE FROM usuario WHERE id = ?");
     
     // Se asocia el valor del ID como parámetro en la consulta (tipo entero)
     $stmt->bind_param('i', $id);

@@ -1,29 +1,51 @@
 <?php
-require_once('../conexion.php');
-include 'header.php';
-include '../control.php';
+// =======================
+// Conexiones y encabezado
+// =======================
 
-$id = isset($_GET['id']) && is_numeric($_GET['id']) ? (int)$_GET['id'] : 0;
+require_once('../conexion.php'); // Conecta con la base de datos
+include 'header.php';           // Incluye la cabecera del panel de administración
+include '../control.php';       // Verifica sesión y permisos del usuario
+
+// =============================
+// Validación del ID de usuario
+// =============================
+
+$id = isset($_GET['id']) && is_numeric($_GET['id']) ? (int)$_GET['id'] : 0; // Obtiene el ID desde la URL y lo valida
 if ($id === 0) {
+    // Si el ID no es válido, redirige a la lista de usuarios con un mensaje
     echo "<script>alert('ID de usuario no válido'); window.location = 'usuarios.php';</script>";
     exit();
 }
 
-// Obtener datos actuales del usuario
-$stmt = $con->prepare("SELECT * FROM usuario WHERE id = ?");
-$stmt->bind_param("i", $id);
+// ===========================
+// Consulta de datos del usuario
+// ===========================
+
+$stmt = $con->prepare("SELECT * FROM usuario WHERE id = ?"); // Prepara la consulta SQL
+$stmt->bind_param("i", $id); // Asocia el parámetro ID
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
+    // Si no se encuentra el usuario, muestra una alerta y redirige
     echo "<script>alert('Usuario no encontrado'); window.location = 'usuarios.php';</script>";
     exit();
 }
 
-$usuarioData = $result->fetch_assoc();
+$usuarioData = $result->fetch_assoc(); // Almacena los datos del usuario en un arreglo asociativo
+
+// ===============================
+// Procesamiento del formulario POST
+// ===============================
 
 if (isset($_POST['btn_editar'])) {
-    // Recoger datos desde POST con validaciones mínimas
+    // Se ejecuta al enviar el formulario para editar el usuario
+
+    // ==============================
+    // Recolección de datos del formulario
+    // ==============================
+
     $nombre           = trim($_POST['nombre']);
     $fecha_nacimiento = $_POST['fecha_nacimiento'];
     $lugar_nacimiento = isset($_POST['lugar_nacimiento']) ? trim($_POST['lugar_nacimiento']) : $usuarioData['lugar_nacimiento'];
@@ -39,25 +61,33 @@ if (isset($_POST['btn_editar'])) {
     $rol              = $_POST['rol'];
     $estado           = $_POST['estado'];
 
-    // Validar rol con valores válidos
+    // ======================
+    // Validación del rol
+    // ======================
+
     $roles_validos = ['Secretaria', 'TecnicoLavado', 'administrador'];
     if (!in_array($rol, $roles_validos)) {
         echo "<script>alert('Rol inválido.');</script>";
         exit();
     }
 
+    // ======================
     // Manejo de imagen
-    $imgFinal = $usuarioData['imagen']; // por defecto la que ya tiene
+    // ======================
 
+    $imgFinal = $usuarioData['imagen']; // Se mantiene la imagen actual como predeterminada
+
+    // Si se sube una nueva imagen
     if (!empty($_FILES['nueva_imagen']['name'])) {
         $imgNombre = $_FILES['nueva_imagen']['name'];
         $imgTmp    = $_FILES['nueva_imagen']['tmp_name'];
         $ext       = pathinfo($imgNombre, PATHINFO_EXTENSION);
-        $imgFinal  = strtolower($usuario . '_' . time() . '.' . $ext);
+        $imgFinal  = strtolower($usuario . '_' . time() . '.' . $ext); // Nuevo nombre único
         $imgDestino = "../IMG/usuarios/" . $imgFinal;
 
+        // Guardar imagen en el servidor
         if (move_uploaded_file($imgTmp, $imgDestino)) {
-            // Borrar imagen anterior si existe y no es default.png
+            // Borrar la imagen anterior si no es la predeterminada
             if (!empty($usuarioData['imagen']) && $usuarioData['imagen'] !== 'default.png' && file_exists("../IMG/usuarios/" . $usuarioData['imagen'])) {
                 unlink("../IMG/usuarios/" . $usuarioData['imagen']);
             }
@@ -67,8 +97,9 @@ if (isset($_POST['btn_editar'])) {
         }
     }
 
-    // NOTA: Aquí podrías hashear la contraseña si quieres seguridad real.
-    // Por ejemplo: $password = password_hash($password, PASSWORD_DEFAULT);
+    // ===========================================
+    // Actualización de los datos del usuario
+    // ===========================================
 
     $stmt = $con->prepare("UPDATE usuario SET nombre=?, fecha_nacimiento=?, lugar_nacimiento=?, numero_identificacion=?, nacionalidad=?, estado_civil=?, direccion=?, telefono=?, numero_emergencia=?, email=?, usuario=?, password=?, rol=?, estado=?, imagen=? WHERE id=?");
 
@@ -99,14 +130,18 @@ if (isset($_POST['btn_editar'])) {
         echo "<script>alert('Error al actualizar usuario: " . $stmt->error . "');</script>";
     }
 }
-
 ?>
 
-<!-- Asegúrate de que el formulario tenga campo lugar_nacimiento, y que coincida con los nombres en PHP -->
+<!-- ===================== -->
+<!-- Formulario HTML Editar -->
+<!-- ===================== -->
+
+<!-- Enlace al CSS personalizado -->
 <link rel="stylesheet" href="../CSS/EditarUserCSS/editar.css" />
 
 <div class="content-wrapper">
   <section class="content-header">
+    <!-- Título y breadcrumb -->
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-sm-6">
@@ -122,10 +157,13 @@ if (isset($_POST['btn_editar'])) {
     </div>
   </section>
 
+  <!-- Formulario de edición -->
   <section class="content">
     <div class="container-fluid d-flex justify-content-center">
       <div class="card editar-user-card">
         <div class="card-body p-4">
+
+          <!-- Avatar del usuario -->
           <div class="text-center mb-4">
             <?php if (!empty($usuarioData['imagen']) && file_exists("../IMG/usuarios/" . $usuarioData['imagen'])): ?>
               <img src="../IMG/usuarios/<?= htmlspecialchars($usuarioData['imagen']); ?>" class="editar-user-avatar img-thumbnail rounded-circle" alt="Avatar de usuario">
@@ -134,9 +172,10 @@ if (isset($_POST['btn_editar'])) {
             <?php endif; ?>
           </div>
 
+          <!-- Formulario de actualización -->
           <form action="" method="POST" enctype="multipart/form-data" id="editar-user-form">
-            <input type="hidden" name="id" value="<?= $usuarioData['id']; ?>">
 
+            <!-- Campos personales -->
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label>Nombre completo:</label>
@@ -159,22 +198,7 @@ if (isset($_POST['btn_editar'])) {
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group col-md-6">
-                <label>Nacionalidad:</label>
-                <input type="text" name="nacionalidad" class="form-control" value="<?= htmlspecialchars($usuarioData['nacionalidad']); ?>">
-              </div>
-              <div class="form-group col-md-6">
-                <label>Estado Civil:</label>
-                <select name="estado_civil" class="form-control" required>
-                  <option value="Soltero" <?= $usuarioData['estado_civil'] === 'Soltero' ? 'selected' : ''; ?>>Soltero</option>
-                  <option value="Casado" <?= $usuarioData['estado_civil'] === 'Casado' ? 'selected' : ''; ?>>Casado</option>
-                  <option value="Divorciado" <?= $usuarioData['estado_civil'] === 'Divorciado' ? 'selected' : ''; ?>>Divorciado</option>
-                  <option value="Viudo" <?= $usuarioData['estado_civil'] === 'Viudo' ? 'selected' : ''; ?>>Viudo</option>
-                </select>
-              </div>
-            </div>
-
+            <!-- Contacto -->
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label>Dirección:</label>
@@ -197,6 +221,7 @@ if (isset($_POST['btn_editar'])) {
               </div>
             </div>
 
+            <!-- Credenciales -->
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label>Usuario:</label>
@@ -208,6 +233,7 @@ if (isset($_POST['btn_editar'])) {
               </div>
             </div>
 
+            <!-- Rol y estado -->
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label>Rol:</label>
@@ -226,11 +252,13 @@ if (isset($_POST['btn_editar'])) {
               </div>
             </div>
 
+            <!-- Imagen nueva -->
             <div class="form-group">
               <label>Nueva imagen (opcional):</label>
               <input type="file" name="nueva_imagen" class="form-control-file" accept="image/*">
             </div>
 
+            <!-- Botones -->
             <div class="d-flex justify-content-between mt-4">
               <button type="submit" name="btn_editar" class="btn btn-success">
                 <i class="fas fa-save"></i> Actualizar
